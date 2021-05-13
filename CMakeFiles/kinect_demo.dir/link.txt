@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/kinect_demo.dir/src/main.cpp.o  -o kinect_demo -Wl,-rpath,/home/medrobotics/freenect2/lib /home/medrobotics/freenect2/lib/libfreenect2.so -lpthread 

@@ -1,0 +1,3 @@
+/home/medrobotics/kinect/CMakeFiles/rebuild_cache.dir
+/home/medrobotics/kinect/CMakeFiles/kinect_demo.dir
+/home/medrobotics/kinect/CMakeFiles/edit_cache.dir
