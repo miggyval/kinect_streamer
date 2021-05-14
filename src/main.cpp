@@ -7,6 +7,11 @@
 #include <csignal>
 #include <cstdlib>
 #include <cstdio>
+#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+
+using namespace cv;
 
 int flag = false;
 
@@ -35,7 +40,8 @@ int main(int argc, char** argv) {
     pipeline = new libfreenect2::CpuPacketPipeline();
     dev = freenect2.openDevice(serial, pipeline);
 
-    libfreenect2::SyncMultiFrameListener listener(libfreenect2::Frame::Color | libfreenect2::Frame::Ir | libfreenect2::Frame::Depth);
+    //libfreenect2::SyncMultiFrameListener listener(libfreenect2::Frame::Color | libfreenect2::Frame::Ir | libfreenect2::Frame::Depth);
+    libfreenect2::SyncMultiFrameListener listener(libfreenect2::Frame::Color);
     libfreenect2::FrameMap frames;
     dev->setColorFrameListener(&listener);
     dev->setIrAndDepthFrameListener(&listener);
@@ -47,16 +53,32 @@ int main(int argc, char** argv) {
     libfreenect2::Frame undistorted(512, 424, 4);
     libfreenect2::Frame registered(512, 424, 4);
     signal(SIGINT, my_handler);
-    while (!flag) {
-        std::cout << flag << std::endl;
+    namedWindow("test", WINDOW_AUTOSIZE);
+    const int max_frames = 100;
+    int num_frames = 0;
+    while (!flag && num_frames < max_frames) {
         if (!listener.waitForNewFrame(frames, 10 * 1000)) {
             std::cout << "Timeout!" << std::endl;
             return -1;
         }
         libfreenect2::Frame *color = frames[libfreenect2::Frame::Color];
-        libfreenect2::Frame *ir = frames[libfreenect2::Frame::Ir];
-        libfreenect2::Frame *depth = frames[libfreenect2::Frame::Depth];
-        registration->apply(color, depth, &undistorted, &registered);
+        //libfreenect2::Frame *ir = frames[libfreenect2::Frame::Ir];
+        //libfreenect2::Frame *depth = frames[libfreenect2::Frame::Depth];
+        //registration->apply(color, depth, &undistorted, &registered);
+        
+        Mat img_color(Size(color->width, color->height), CV_8UC4, color->data);
+        Mat img_color_720p;
+        resize(img_color, img_color_720p, Size(1280, 720));
+        //Mat img_ir(Size(ir->width, ir->height), CV_32FC1, ir->data);
+        //Mat img_depth(Size(depth->width, depth->height), CV_32FC1, depth->data);
+        //cvtColor(img_color, img_color, COLOR_BGRA2BGR);
+        //Mat img_rand(Size(1920, 1080), CV_8UC3);
+        //randu(img_rand, Scalar(0, 0, 0), Scalar(255, 255, 255));
+        //imshow("test", img_color);
+        imwrite(std::string("img/img_") + std::to_string(num_frames) + std::string(".png"), img_color_720p, {IMWRITE_PNG_COMPRESSION, 1, IMWRITE_PNG_STRATEGY_HUFFMAN_ONLY, IMWRITE_PNG_STRATEGY_HUFFMAN_ONLY});
+        num_frames++;
+        std::cout << num_frames << std::endl;
+        //waitKey(1);
         listener.release(frames);
     }
     dev->stop();
