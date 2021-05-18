@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/valencimm/kinect
+CMAKE_SOURCE_DIR = /home/medrobotics/kinect
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/valencimm/kinect
+CMAKE_BINARY_DIR = /home/medrobotics/kinect
 
 # Include any dependencies generated for this target.
 include CMakeFiles/kinect_write.dir/depend.make
@@ -59,16 +59,16 @@ include CMakeFiles/kinect_write.dir/flags.make
 
 CMakeFiles/kinect_write.dir/src/kinect_write.cpp.o: CMakeFiles/kinect_write.dir/flags.make
 CMakeFiles/kinect_write.dir/src/kinect_write.cpp.o: src/kinect_write.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/valencimm/kinect/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/kinect_write.dir/src/kinect_write.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/kinect_write.dir/src/kinect_write.cpp.o -c /home/valencimm/kinect/src/kinect_write.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/medrobotics/kinect/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/kinect_write.dir/src/kinect_write.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/kinect_write.dir/src/kinect_write.cpp.o -c /home/medrobotics/kinect/src/kinect_write.cpp
 
 CMakeFiles/kinect_write.dir/src/kinect_write.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/kinect_write.dir/src/kinect_write.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/valencimm/kinect/src/kinect_write.cpp > CMakeFiles/kinect_write.dir/src/kinect_write.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/medrobotics/kinect/src/kinect_write.cpp > CMakeFiles/kinect_write.dir/src/kinect_write.cpp.i
 
 CMakeFiles/kinect_write.dir/src/kinect_write.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/kinect_write.dir/src/kinect_write.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/valencimm/kinect/src/kinect_write.cpp -o CMakeFiles/kinect_write.dir/src/kinect_write.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/medrobotics/kinect/src/kinect_write.cpp -o CMakeFiles/kinect_write.dir/src/kinect_write.cpp.s
 
 CMakeFiles/kinect_write.dir/src/kinect_write.cpp.o.requires:
 
@@ -90,24 +90,24 @@ kinect_write_EXTERNAL_OBJECTS =
 
 kinect_write: CMakeFiles/kinect_write.dir/src/kinect_write.cpp.o
 kinect_write: CMakeFiles/kinect_write.dir/build.make
-kinect_write: /home/valencimm/freenect2/lib/libfreenect2.so
-kinect_write: /home/valencimm/opencv/build/lib/libopencv_gapi.so.4.5.2
-kinect_write: /home/valencimm/opencv/build/lib/libopencv_highgui.so.4.5.2
-kinect_write: /home/valencimm/opencv/build/lib/libopencv_ml.so.4.5.2
-kinect_write: /home/valencimm/opencv/build/lib/libopencv_objdetect.so.4.5.2
-kinect_write: /home/valencimm/opencv/build/lib/libopencv_photo.so.4.5.2
-kinect_write: /home/valencimm/opencv/build/lib/libopencv_stitching.so.4.5.2
-kinect_write: /home/valencimm/opencv/build/lib/libopencv_video.so.4.5.2
-kinect_write: /home/valencimm/opencv/build/lib/libopencv_videoio.so.4.5.2
-kinect_write: /home/valencimm/opencv/build/lib/libopencv_dnn.so.4.5.2
-kinect_write: /home/valencimm/opencv/build/lib/libopencv_imgcodecs.so.4.5.2
-kinect_write: /home/valencimm/opencv/build/lib/libopencv_calib3d.so.4.5.2
-kinect_write: /home/valencimm/opencv/build/lib/libopencv_features2d.so.4.5.2
-kinect_write: /home/valencimm/opencv/build/lib/libopencv_flann.so.4.5.2
-kinect_write: /home/valencimm/opencv/build/lib/libopencv_imgproc.so.4.5.2
-kinect_write: /home/valencimm/opencv/build/lib/libopencv_core.so.4.5.2
+kinect_write: /home/medrobotics/freenect2/lib/libfreenect2.so
+kinect_write: /home/medrobotics/opencv/build/lib/libopencv_gapi.so.4.5.2
+kinect_write: /home/medrobotics/opencv/build/lib/libopencv_highgui.so.4.5.2
+kinect_write: /home/medrobotics/opencv/build/lib/libopencv_ml.so.4.5.2
+kinect_write: /home/medrobotics/opencv/build/lib/libopencv_objdetect.so.4.5.2
+kinect_write: /home/medrobotics/opencv/build/lib/libopencv_photo.so.4.5.2
+kinect_write: /home/medrobotics/opencv/build/lib/libopencv_stitching.so.4.5.2
+kinect_write: /home/medrobotics/opencv/build/lib/libopencv_video.so.4.5.2
+kinect_write: /home/medrobotics/opencv/build/lib/libopencv_videoio.so.4.5.2
+kinect_write: /home/medrobotics/opencv/build/lib/libopencv_dnn.so.4.5.2
+kinect_write: /home/medrobotics/opencv/build/lib/libopencv_imgcodecs.so.4.5.2
+kinect_write: /home/medrobotics/opencv/build/lib/libopencv_calib3d.so.4.5.2
+kinect_write: /home/medrobotics/opencv/build/lib/libopencv_features2d.so.4.5.2
+kinect_write: /home/medrobotics/opencv/build/lib/libopencv_flann.so.4.5.2
+kinect_write: /home/medrobotics/opencv/build/lib/libopencv_imgproc.so.4.5.2
+kinect_write: /home/medrobotics/opencv/build/lib/libopencv_core.so.4.5.2
 kinect_write: CMakeFiles/kinect_write.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/valencimm/kinect/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable kinect_write"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/medrobotics/kinect/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable kinect_write"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/kinect_write.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -124,6 +124,6 @@ CMakeFiles/kinect_write.dir/clean:
 .PHONY : CMakeFiles/kinect_write.dir/clean
 
 CMakeFiles/kinect_write.dir/depend:
-	cd /home/valencimm/kinect && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/valencimm/kinect /home/valencimm/kinect /home/valencimm/kinect /home/valencimm/kinect /home/valencimm/kinect/CMakeFiles/kinect_write.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/medrobotics/kinect && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/medrobotics/kinect /home/medrobotics/kinect /home/medrobotics/kinect /home/medrobotics/kinect /home/medrobotics/kinect/CMakeFiles/kinect_write.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/kinect_write.dir/depend
 

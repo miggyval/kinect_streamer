@@ -42,20 +42,20 @@ int main(int argc, char** argv) {
         std::cout << "no device connected!" << std::endl;
         return -1;
     }
-    if (serial == "") {
-        serial = freenect2.getDefaultDeviceSerialNumber();
-    }
     pipeline = new libfreenect2::CpuPacketPipeline();
     dev = freenect2.openDevice(serial, pipeline);
 
     libfreenect2::SyncMultiFrameListener listener(libfreenect2::Frame::Color | libfreenect2::Frame::Depth);
+
     libfreenect2::FrameMap frames;
     dev->setColorFrameListener(&listener);
     dev->setIrAndDepthFrameListener(&listener);
 
     dev->startStreams(true, true);
+
     std::cout << "Device serial: " << dev->getSerialNumber() << std::endl;
-    std::cout << "Device firmware: " << dev->getFirmwareVersion() << std::endl;
+    std::cout << "Device firmware: " << dev->getFirmwareVersion() << std::endl; 
+
     libfreenect2::Registration* registration = new libfreenect2::Registration(dev->getIrCameraParams(), dev->getColorCameraParams());
     libfreenect2::Frame undistorted(512, 424, 4);
     libfreenect2::Frame registered(512, 424, 4);
