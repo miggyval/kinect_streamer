@@ -33,6 +33,8 @@ int main(int argc, char** argv) {
     std::string serial = "";
     if (argc == 2) {
         serial = argv[1];
+    } else {
+        serial = freenect2.getDefaultDeviceSerialNumber();
     }
     libfreenect2::Freenect2 freenect2;
     libfreenect2::Freenect2Device *dev = 0;
@@ -77,9 +79,9 @@ int main(int argc, char** argv) {
         libfreenect2::Frame *depth = frames[libfreenect2::Frame::Depth];
         int* map = (int*)calloc(sizeof(int*), 512 * 424);
         registration->apply(color, depth, &undistorted, &registered, true, NULL, map);
-        std::string color_string = std::string("img/") + serial + std::string("/") + std::string("color/") + std::to_string(num_frames) + std::string(".bin");
-        std::string depth_string = std::string("img/") + serial + std::string("/") + std::string("depth/") + std::to_string(num_frames) + std::string(".bin");
-        std::string map_string = std::string("img/") + serial + std::string("/") + std::string("map/") + std::to_string(num_frames) + std::string(".bin");
+        std::string color_string = std::string("/media/medrobotics/Data/img/") + std::string("color/") + std::to_string(num_frames) + std::string(".bin");
+        std::string depth_string = std::string("/media/medrobotics/Data/img/") + std::string("depth/") + std::to_string(num_frames) + std::string(".bin");
+        std::string map_string = std::string("/media/medrobotics/Data/img/") + std::string("map/") + std::to_string(num_frames) + std::string(".bin");
         FILE* f_color = fopen(color_string.c_str(), "w+");
         if (f_color == NULL) {
             std::cout << "Color file does not exist" << std::endl;

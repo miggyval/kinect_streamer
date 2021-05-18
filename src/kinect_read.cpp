@@ -29,8 +29,8 @@ int main(int argc, char** argv) {
     namedWindow("color", WINDOW_AUTOSIZE);
     namedWindow("depth", WINDOW_AUTOSIZE);
     while (num_frames < max_frames) {
-        std::string color_string = std::string("img/501530742442/color/") + std::to_string(num_frames) + std::string(".bin");
-        std::string depth_string = std::string("img/501530742442/depth/") + std::to_string(num_frames) + std::string(".bin");
+        std::string color_string = std::string("/media/medrobotics/Data/img/color/") + std::to_string(num_frames) + std::string(".bin");
+        std::string depth_string = std::string("/media/medrobotics/Data/img/depth/") + std::to_string(num_frames) + std::string(".bin");
         FILE* f_color = fopen(color_string.c_str(), "r");
         FILE* f_depth = fopen(depth_string.c_str(), "r");
         Mat img_color(Size(1920, 1080), CV_8UC4);
