@@ -10,6 +10,8 @@ include_directories(
     ${OpenCV_INCLUDE_DIRS}
 )
 
-add_executable( kinect_demo src/main.cpp )
+add_executable( kinect_write src/kinect_write.cpp )
+add_executable( kinect_read src/kinect_read.cpp )
 
-target_link_libraries( kinect_demo ${freenect2_LIBRARIES} ${OpenCV_LIBS} )
+target_link_libraries( kinect_write ${freenect2_LIBRARIES} ${OpenCV_LIBS} )
+target_link_libraries( kinect_read ${freenect2_LIBRARIES} ${OpenCV_LIBS} )

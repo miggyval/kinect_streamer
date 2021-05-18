@@ -49,5 +49,6 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
-  "CMakeFiles/kinect_demo.dir/DependInfo.cmake"
+  "CMakeFiles/kinect_write.dir/DependInfo.cmake"
+  "CMakeFiles/kinect_read.dir/DependInfo.cmake"
   )

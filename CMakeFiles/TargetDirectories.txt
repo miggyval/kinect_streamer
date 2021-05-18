@@ -1,3 +1,4 @@
-/home/valencimm/kinect/CMakeFiles/rebuild_cache.dir
-/home/valencimm/kinect/CMakeFiles/kinect_demo.dir
 /home/valencimm/kinect/CMakeFiles/edit_cache.dir
+/home/valencimm/kinect/CMakeFiles/kinect_write.dir
+/home/valencimm/kinect/CMakeFiles/rebuild_cache.dir
+/home/valencimm/kinect/CMakeFiles/kinect_read.dir

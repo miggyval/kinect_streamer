@@ -56,17 +56,6 @@ CMAKE_BINARY_DIR = /home/valencimm/kinect
 #=============================================================================
 # Targets provided globally by CMake.
 
-# Special rule for the target rebuild_cache
-rebuild_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
-	/usr/bin/cmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
-.PHONY : rebuild_cache
-
-# Special rule for the target rebuild_cache
-rebuild_cache/fast: rebuild_cache
-
-.PHONY : rebuild_cache/fast
-
 # Special rule for the target edit_cache
 edit_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
@@ -77,6 +66,17 @@ edit_cache:
 edit_cache/fast: edit_cache
 
 .PHONY : edit_cache/fast
+
+# Special rule for the target rebuild_cache
+rebuild_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
+	/usr/bin/cmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+.PHONY : rebuild_cache
+
+# Special rule for the target rebuild_cache
+rebuild_cache/fast: rebuild_cache
+
+.PHONY : rebuild_cache/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -111,44 +111,84 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named kinect_demo
+# Target rules for targets named kinect_write
 
 # Build rule for target.
-kinect_demo: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 kinect_demo
-.PHONY : kinect_demo
+kinect_write: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 kinect_write
+.PHONY : kinect_write
 
 # fast build rule for target.
-kinect_demo/fast:
-	$(MAKE) -f CMakeFiles/kinect_demo.dir/build.make CMakeFiles/kinect_demo.dir/build
-.PHONY : kinect_demo/fast
+kinect_write/fast:
+	$(MAKE) -f CMakeFiles/kinect_write.dir/build.make CMakeFiles/kinect_write.dir/build
+.PHONY : kinect_write/fast
 
-src/main.o: src/main.cpp.o
+#=============================================================================
+# Target rules for targets named kinect_read
 
-.PHONY : src/main.o
+# Build rule for target.
+kinect_read: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 kinect_read
+.PHONY : kinect_read
+
+# fast build rule for target.
+kinect_read/fast:
+	$(MAKE) -f CMakeFiles/kinect_read.dir/build.make CMakeFiles/kinect_read.dir/build
+.PHONY : kinect_read/fast
+
+src/kinect_read.o: src/kinect_read.cpp.o
+
+.PHONY : src/kinect_read.o
 
 # target to build an object file
-src/main.cpp.o:
-	$(MAKE) -f CMakeFiles/kinect_demo.dir/build.make CMakeFiles/kinect_demo.dir/src/main.cpp.o
-.PHONY : src/main.cpp.o
+src/kinect_read.cpp.o:
+	$(MAKE) -f CMakeFiles/kinect_read.dir/build.make CMakeFiles/kinect_read.dir/src/kinect_read.cpp.o
+.PHONY : src/kinect_read.cpp.o
 
-src/main.i: src/main.cpp.i
+src/kinect_read.i: src/kinect_read.cpp.i
 
-.PHONY : src/main.i
+.PHONY : src/kinect_read.i
 
 # target to preprocess a source file
-src/main.cpp.i:
-	$(MAKE) -f CMakeFiles/kinect_demo.dir/build.make CMakeFiles/kinect_demo.dir/src/main.cpp.i
-.PHONY : src/main.cpp.i
+src/kinect_read.cpp.i:
+	$(MAKE) -f CMakeFiles/kinect_read.dir/build.make CMakeFiles/kinect_read.dir/src/kinect_read.cpp.i
+.PHONY : src/kinect_read.cpp.i
 
-src/main.s: src/main.cpp.s
+src/kinect_read.s: src/kinect_read.cpp.s
 
-.PHONY : src/main.s
+.PHONY : src/kinect_read.s
 
 # target to generate assembly for a file
-src/main.cpp.s:
-	$(MAKE) -f CMakeFiles/kinect_demo.dir/build.make CMakeFiles/kinect_demo.dir/src/main.cpp.s
-.PHONY : src/main.cpp.s
+src/kinect_read.cpp.s:
+	$(MAKE) -f CMakeFiles/kinect_read.dir/build.make CMakeFiles/kinect_read.dir/src/kinect_read.cpp.s
+.PHONY : src/kinect_read.cpp.s
+
+src/kinect_write.o: src/kinect_write.cpp.o
+
+.PHONY : src/kinect_write.o
+
+# target to build an object file
+src/kinect_write.cpp.o:
+	$(MAKE) -f CMakeFiles/kinect_write.dir/build.make CMakeFiles/kinect_write.dir/src/kinect_write.cpp.o
+.PHONY : src/kinect_write.cpp.o
+
+src/kinect_write.i: src/kinect_write.cpp.i
+
+.PHONY : src/kinect_write.i
+
+# target to preprocess a source file
+src/kinect_write.cpp.i:
+	$(MAKE) -f CMakeFiles/kinect_write.dir/build.make CMakeFiles/kinect_write.dir/src/kinect_write.cpp.i
+.PHONY : src/kinect_write.cpp.i
+
+src/kinect_write.s: src/kinect_write.cpp.s
+
+.PHONY : src/kinect_write.s
+
+# target to generate assembly for a file
+src/kinect_write.cpp.s:
+	$(MAKE) -f CMakeFiles/kinect_write.dir/build.make CMakeFiles/kinect_write.dir/src/kinect_write.cpp.s
+.PHONY : src/kinect_write.cpp.s
 
 # Help Target
 help:
@@ -156,12 +196,16 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
-	@echo "... rebuild_cache"
-	@echo "... kinect_demo"
 	@echo "... edit_cache"
-	@echo "... src/main.o"
-	@echo "... src/main.i"
-	@echo "... src/main.s"
+	@echo "... kinect_write"
+	@echo "... rebuild_cache"
+	@echo "... kinect_read"
+	@echo "... src/kinect_read.o"
+	@echo "... src/kinect_read.i"
+	@echo "... src/kinect_read.s"
+	@echo "... src/kinect_write.o"
+	@echo "... src/kinect_write.i"
+	@echo "... src/kinect_write.s"
 .PHONY : help
 
 
