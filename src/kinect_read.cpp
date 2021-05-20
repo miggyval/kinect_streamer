@@ -30,15 +30,17 @@ int main(int argc, char** argv) {
     namedWindow("depth", WINDOW_AUTOSIZE);
     unsigned int time = 0;
     unsigned int last_time = 0;
+    std::string root_string = std::string("/home/uqmvale6/Desktop/img/");
+    std::string time_string = root_string + std::string("time/");
+    std::string color_string = root_string + std::string("color/");
+    std::string depth_string = root_string + std::string("depth/");
+    std::string map_string = root_string + std::string("map/");
+    std::string ext_string = std::string(".bin");
     while (num_frames < max_frames) {
-	    std::string time_string = std::string("/media/medrobotics/Data/img/") + std::string("time/") + std::to_string(num_frames) + std::string(".bin");
-	    std::string color_string = std::string("/media/medrobotics/Data/img/") + std::string("color/") + std::to_string(num_frames) + std::string(".bin");
-        std::string depth_string = std::string("/media/medrobotics/Data/img/") + std::string("depth/") + std::to_string(num_frames) + std::string(".bin");
-        std::string map_string = std::string("/media/medrobotics/Data/img/") + std::string("map/") + std::to_string(num_frames) + std::string(".bin");
-        FILE* f_color = fopen(color_string.c_str(), "r");
-        FILE* f_depth = fopen(depth_string.c_str(), "r");
-        FILE* f_map = fopen(map_string.c_str(), "r");
-        FILE* f_time = fopen(time_string.c_str(), "r");
+        FILE* f_color = fopen((color_string + std::to_string(num_frames) + ext_string).c_str(), "r");
+        FILE* f_depth = fopen((depth_string +  std::to_string(num_frames) + ext_string).c_str(), "r");
+        FILE* f_map = fopen((map_string + std::to_string(num_frames) + ext_string).c_str(), "r");
+        FILE* f_time = fopen((time_string + std::to_string(num_frames) + ext_string).c_str(), "r");
         if (!f_color || !f_depth || !f_map || !f_time) {
             break;
         }
@@ -48,7 +50,6 @@ int main(int argc, char** argv) {
         fread(img_depth.data, img_depth.elemSize(), img_depth.rows * img_depth.cols, f_depth);
         last_time = time;
         fread(&time, sizeof(unsigned int), 1, f_time);
-        std::cout << time << std::endl;
         fclose(f_color);
         fclose(f_depth);
         fclose(f_map);

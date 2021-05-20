@@ -1,4 +1,4 @@
-/home/medrobotics/kinect/CMakeFiles/edit_cache.dir
-/home/medrobotics/kinect/CMakeFiles/kinect_write.dir
-/home/medrobotics/kinect/CMakeFiles/rebuild_cache.dir
-/home/medrobotics/kinect/CMakeFiles/kinect_read.dir
+/home/uqmvale6/kinect/CMakeFiles/edit_cache.dir
+/home/uqmvale6/kinect/CMakeFiles/kinect_write.dir
+/home/uqmvale6/kinect/CMakeFiles/rebuild_cache.dir
+/home/uqmvale6/kinect/CMakeFiles/kinect_read.dir

@@ -1,7 +1,8 @@
 file(REMOVE_RECURSE
   "CMakeFiles/kinect_write.dir/src/kinect_write.cpp.o"
-  "kinect_write.pdb"
+  "CMakeFiles/kinect_write.dir/src/kinect_write.cpp.o.d"
   "kinect_write"
+  "kinect_write.pdb"
 )
 
 # Per-language clean rules from dependency scanning.

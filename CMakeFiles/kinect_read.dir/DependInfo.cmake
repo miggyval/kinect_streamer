@@ -1,34 +1,14 @@
+
+# Consider dependencies only in project.
+set(CMAKE_DEPENDS_IN_PROJECT_ONLY OFF)
+
 # The set of languages for which implicit dependencies are needed:
 set(CMAKE_DEPENDS_LANGUAGES
-  "CXX"
   )
-# The set of files for implicit dependencies of each language:
-set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/medrobotics/kinect/src/kinect_read.cpp" "/home/medrobotics/kinect/CMakeFiles/kinect_read.dir/src/kinect_read.cpp.o"
-  )
-set(CMAKE_CXX_COMPILER_ID "GNU")
 
-# The include file search paths:
-set(CMAKE_CXX_TARGET_INCLUDE_PATH
-  "/home/medrobotics/freenect2/include"
-  "/home/medrobotics/opencv/build"
-  "/home/medrobotics/opencv-master/include"
-  "/home/medrobotics/opencv-master/modules/core/include"
-  "/home/medrobotics/opencv-master/modules/flann/include"
-  "/home/medrobotics/opencv-master/modules/imgproc/include"
-  "/home/medrobotics/opencv-master/modules/ml/include"
-  "/home/medrobotics/opencv-master/modules/photo/include"
-  "/home/medrobotics/opencv-master/modules/dnn/include"
-  "/home/medrobotics/opencv-master/modules/features2d/include"
-  "/home/medrobotics/opencv-master/modules/imgcodecs/include"
-  "/home/medrobotics/opencv-master/modules/videoio/include"
-  "/home/medrobotics/opencv-master/modules/calib3d/include"
-  "/home/medrobotics/opencv-master/modules/highgui/include"
-  "/home/medrobotics/opencv-master/modules/objdetect/include"
-  "/home/medrobotics/opencv-master/modules/stitching/include"
-  "/home/medrobotics/opencv-master/modules/ts/include"
-  "/home/medrobotics/opencv-master/modules/video/include"
-  "/home/medrobotics/opencv-master/modules/gapi/include"
+# The set of dependency files which are needed:
+set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/home/uqmvale6/kinect/src/kinect_read.cpp" "CMakeFiles/kinect_read.dir/src/kinect_read.cpp.o" "gcc" "CMakeFiles/kinect_read.dir/src/kinect_read.cpp.o.d"
   )
 
 # Targets to which this target links.
