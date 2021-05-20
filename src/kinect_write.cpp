@@ -31,14 +31,16 @@ int main(int argc, char** argv) {
 
     signal(SIGINT, pre_handler);
     std::string serial = "";
+
+    libfreenect2::Freenect2 freenect2;
+    libfreenect2::Freenect2Device *dev = 0;
+    libfreenect2::PacketPipeline *pipeline = 0;
+
     if (argc == 2) {
         serial = argv[1];
     } else {
         serial = freenect2.getDefaultDeviceSerialNumber();
     }
-    libfreenect2::Freenect2 freenect2;
-    libfreenect2::Freenect2Device *dev = 0;
-    libfreenect2::PacketPipeline *pipeline = 0;
 
     if (freenect2.enumerateDevices() == 0) {
         std::cout << "no device connected!" << std::endl;
@@ -64,7 +66,7 @@ int main(int argc, char** argv) {
     signal(SIGINT, my_handler);
     namedWindow("test", WINDOW_AUTOSIZE);
     const int fps = 15;
-    const int seconds = 60;
+    const int seconds = 60 * 30;
     const int max_frames = fps * seconds;
     int num_frames = 0;
 
@@ -75,11 +77,14 @@ int main(int argc, char** argv) {
             std::cout << "Timeout!" << std::endl;
             return -1;
         }
-        libfreenect2::Frame *color = frames[libfreenect2::Frame::Color];
+	auto now = std::chrono::high_resolution_clock::now() - begin;
+	auto mill = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
+	libfreenect2::Frame *color = frames[libfreenect2::Frame::Color];
         libfreenect2::Frame *depth = frames[libfreenect2::Frame::Depth];
         int* map = (int*)calloc(sizeof(int*), 512 * 424);
         registration->apply(color, depth, &undistorted, &registered, true, NULL, map);
-        std::string color_string = std::string("/media/medrobotics/Data/img/") + std::string("color/") + std::to_string(num_frames) + std::string(".bin");
+	    std::string time_string = std::string("/media/medrobotics/Data/img/") + std::string("time/") + std::to_string(num_frames) + std::string(".bin");
+	    std::string color_string = std::string("/media/medrobotics/Data/img/") + std::string("color/") + std::to_string(num_frames) + std::string(".bin");
         std::string depth_string = std::string("/media/medrobotics/Data/img/") + std::string("depth/") + std::to_string(num_frames) + std::string(".bin");
         std::string map_string = std::string("/media/medrobotics/Data/img/") + std::string("map/") + std::to_string(num_frames) + std::string(".bin");
         FILE* f_color = fopen(color_string.c_str(), "w+");
@@ -97,12 +102,20 @@ int main(int argc, char** argv) {
             std::cout << "Map file does not exist" << std::endl;
             return -1;
         }
+	FILE* f_time = fopen(time_string.c_str(), "w+");
+	if (f_time == NULL) {
+	    std::cout << "Time file does not exist" << std::endl;
+	    return -1;
+	}
         fwrite(color->data, color->bytes_per_pixel, color->width * color->height, f_color);
         fwrite(depth->data, depth->bytes_per_pixel, depth->width * depth->height, f_depth);
-        fwrite(map, 4, 512 * 424, f_map);
+        fwrite(&mill, sizeof(mill), 1, f_time);
+	fwrite(map, 4, 512 * 424, f_map);
+	
         free(map);
         fclose(f_color);
         fclose(f_depth);
+	fclose(f_time);
         fclose(f_map);
         num_frames++;
         listener.release(frames);
