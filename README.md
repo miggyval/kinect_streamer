@@ -5,7 +5,7 @@
 sudo apt-get git build-essential
 ```
 ### Installing OpenCV
-```
+```console
 # Install a whole bunch of prerequisites
 sudo apt install build-essential cmake git pkg-config libgtk-3-dev \
     libavcodec-dev libavformat-dev libswscale-dev libv4l-dev \
@@ -19,9 +19,9 @@ sudo apt update && sudo apt install -y cmake g++ wget unzip
 wget -O opencv.zip https://github.com/opencv/opencv/archive/master.zip
 unzip opencv.zip
 # Create build directory
-mkdir -p build && cd build
+mkdir -p ~/opencv/build && cd ~/opencv/build
 # Configure
-cmake  ../opencv-master
+cmake  ../../opencv-master
 # Build
 cmake --build .
 ```
@@ -43,9 +43,20 @@ cmake -Dfreenect2_DIR=$HOME/freenect2/lib/cmake/freenect2 -DOpenCV_DIR=$HOME/ope
 make -j`nproc`
 ```
 ## Running Kinect
+### Writing to Disk
+- WARNING: Recommended disk space - 10 MB per frame (approx 28 FPS)
+- Example Space: 1 hour -> 1 TB
+- Compress after session
 ```console
 # Usage
 ./kinect_write <folder>
 # Example
 ./kinect_write $HOME/Desktop/kinect_002/patient_x
+```
+### Reading from Disk
+```console
+# Usage
+./kinect_read <folder>
+# Example
+./kinect_read $HOME/Desktop/kinect_002/patient_x
 ```
