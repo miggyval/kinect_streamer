@@ -6,7 +6,7 @@ Driver for recording and viewing Kinect v2 streams.
 **Features**
 - **kinect_recorder** -> Recording to disk from Kinect v2
 - **kinect_viewer** -> Viewing binary files written by program
-- See chapter [Running Kinect](README.md#RunningKinect) below for usage
+- See chapter [Running Kinect](README.md#running-kinect) below for usage
 
 ## Acknowledgements
 - OpenKinect: libfreenect2
