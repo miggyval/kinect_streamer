@@ -11,7 +11,7 @@ find_package(freenect2 REQUIRED)
 find_package( OpenCV REQUIRED )
 
 include_directories(
-    ${include}
+    include
     ${freenect2_INCLUDE_DIR}
     ${OpenCV_INCLUDE_DIRS}
     $ENV{HOME}/argparse/include

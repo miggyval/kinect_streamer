@@ -9,6 +9,16 @@
 #include <libfreenect2/packet_pipeline.h>
 #include <libfreenect2/logger.h>
 
+
+#define COLOR_W 1920
+#define COLOR_H 1080
+#define DEPTH_W 512
+#define DEPTH_H 424
+
+#define DEPTH_MAX 2000.0
+#define FPS_MAX 30
+
+
 class KinectDevice {
 private:
     libfreenect2::Freenect2* freenect2;
