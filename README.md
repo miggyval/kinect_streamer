@@ -1,4 +1,12 @@
 # KinectStreamer
+
+## Table of Contents
+* [**Description**](README.md#description)
+* [**Acknowledgements**](README.md#acknowledgements)
+* [**Prerequisites**](README.md#prerequisites)
+* [**Downloading**](README.md#downloading)
+* [**Building**](README.md#building)
+* [**Running KinectStreamer**](README.md#running-kinectstreamer)
 ## Description
 
 Driver for recording and viewing Kinect v2 streams.
@@ -48,9 +56,18 @@ Follow instructions from morrisfranken
 https://github.com/morrisfranken/argparse
 
 ## Downloading
+
+Through https
 ```console
 git clone https://github.com/uqmvale6/kinect_streamer.git
 ```
+Through ssh
+```console
+git clone git@github.com:uqmvale6/kinect_streamer.git
+```
+Through zip download
+- https://github.com/uqmvale6/kinect_streamer/archive/refs/heads/main.zip
+
 ## Building
 ```console
 # Go to kinect_viewer directory
@@ -63,7 +80,7 @@ cmake .
 # Run Makefile
 make -j`nproc`
 ```
-## Running Kinect
+## Running Kinect Streamer
 ### Recording to Disk
 - WARNING: Recommended disk space - 10 MB per frame (approx 28 FPS)
 - Example Space: 1 hour -> 1 TB
