@@ -41,8 +41,11 @@ git clone {repo}
 ```console
 # Go to kinect_viewer directory
 cd kinect_viewer
+# (Optional) Set library directories in CMakeLists.txt for alternate installations
+set(freenect2_DIR <PATH>)
+set(OpenCV_DIR <PATH>)
 # Run CMake command
-cmake -Dfreenect2_DIR=$HOME/freenect2/lib/cmake/freenect2 -DOpenCV_DIR=$HOME/opencv/build .
+cmake .
 # Run Makefile
 make -j`nproc`
 ```
