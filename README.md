@@ -35,7 +35,7 @@ https://github.com/morrisfranken/argparse
 
 ## Downloading
 ```console
-git clone {repo}
+git clone https://github.com/uqmvale6/kinect_streamer.git
 ```
 ## Building
 ```console
