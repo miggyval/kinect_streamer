@@ -21,7 +21,9 @@ void my_handler(int s) {
 }
 
 int main(int argc, char** argv) {   
-
+    if (argc != 2) {
+        return -1;
+    }
     const int fps = 15;
     const int seconds = 60 * 30;
     const int max_frames = fps * seconds;
@@ -30,17 +32,23 @@ int main(int argc, char** argv) {
     namedWindow("depth", WINDOW_AUTOSIZE);
     unsigned int time = 0;
     unsigned int last_time = 0;
-    std::string root_string = std::string("/home/uqmvale6/Desktop/img/");
-    std::string time_string = root_string + std::string("time/");
-    std::string color_string = root_string + std::string("color/");
-    std::string depth_string = root_string + std::string("depth/");
-    std::string map_string = root_string + std::string("map/");
+    std::string root_string = std::string(argv[1]);
+    std::string time_string = root_string + std::string("/time/");
+    std::string color_string = root_string + std::string("/color/");
+    std::string depth_string = root_string + std::string("/depth/");
+    std::string map_string = root_string + std::string("/map/");
     std::string ext_string = std::string(".bin");
+
+    
     while (num_frames < max_frames) {
-        FILE* f_color = fopen((color_string + std::to_string(num_frames) + ext_string).c_str(), "r");
-        FILE* f_depth = fopen((depth_string +  std::to_string(num_frames) + ext_string).c_str(), "r");
-        FILE* f_map = fopen((map_string + std::to_string(num_frames) + ext_string).c_str(), "r");
-        FILE* f_time = fopen((time_string + std::to_string(num_frames) + ext_string).c_str(), "r");
+        std::string color_filename = color_string + std::to_string(num_frames) + ext_string;
+        std::string depth_filename = depth_string + std::to_string(num_frames) + ext_string;
+        std::string map_filename = map_string + std::to_string(num_frames) + ext_string;
+        std::string time_filename = time_string + std::to_string(num_frames) + ext_string;
+        FILE* f_color = fopen(color_filename.c_str(), "r");
+        FILE* f_depth = fopen(depth_filename.c_str(), "r");
+        FILE* f_map = fopen(map_filename.c_str(), "r");
+        FILE* f_time = fopen(time_filename.c_str(), "r");
         if (!f_color || !f_depth || !f_map || !f_time) {
             break;
         }

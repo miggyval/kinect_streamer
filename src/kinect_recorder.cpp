@@ -8,11 +8,16 @@
 #include <cstdlib>
 #include <cstdio>
 #include <chrono>
-//#include <opencv2/opencv.hpp>
-//#include <opencv2/core.hpp>
-//#include <opencv2/highgui.hpp>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <experimental/filesystem>
+#include <argparse/argparse.hpp>
 
-//using namespace cv;
+struct KinectRecorderArgs : public argparse::Args {
+    std::string &src_path = arg("save directory path");
+    bool &webcam = flag("w,webcam", "use webcam instead of kinect").set_default(false);
+};
 
 int flag = false;
 
@@ -27,23 +32,63 @@ void my_handler(int s) {
     flag = true;
 }
 
+
+namespace fs = std::experimental::filesystem;
+
+void iter_delete(fs::path path) {
+    std::cout << "Delete?" << std::endl;
+    std::cin.ignore();
+}
+
 int main(int argc, char** argv) {
 
+    KinectRecorderArgs args = argparse::parse<KinectRecorderArgs>(argc, argv);
+
     signal(SIGINT, pre_handler);
+
+    std::string root_string = std::string(argv[1]);
+    std::string time_string = root_string + std::string("/time/");
+    std::string color_string = root_string + std::string("/color/");
+    std::string depth_string = root_string + std::string("/depth/");
+    std::string map_string = root_string + std::string("/map/");
+    std::string ext_string = std::string(".bin");
+
+
+    if (fs::exists(fs::path(root_string.c_str()))) {
+        std::cout << "Folder already exists." << std::endl;
+        std::cout << "Would you like to overwrite the data? [Y/n]" << std::endl;
+        std::string yn;
+        while (true) {
+            std::cin >> yn;
+            if (yn == std::string("Y") || yn == std::string("y")) {
+                break;
+            } else if (yn == std::string("N") || yn == std::string("n")) {
+                exit(1);
+            }
+            std::cout << "Please try again." << std::endl;
+        }
+        std::cout << "Erasing ALL contents of " << root_string << std::endl;
+        iter_delete("");
+    } else {
+        std::cout << "Creating folder: " << root_string << std::endl;
+        bool root_check = fs::create_directories(fs::path(root_string));
+    }
+
+    int color_check = mkdir(color_string.c_str(), 0777);
+    int depth_check = mkdir(depth_string.c_str(), 0777);
+    int map_check = mkdir(map_string.c_str(), 0777);
+    int time_check = mkdir(time_string.c_str(), 0777);
+
     std::string serial = "";
 
     libfreenect2::Freenect2 freenect2;
     libfreenect2::Freenect2Device *dev = 0;
     libfreenect2::PacketPipeline *pipeline = 0;
 
-    if (argc == 2) {
-        serial = argv[1];
-    } else {
-        serial = freenect2.getDefaultDeviceSerialNumber();
-    }
+    serial = freenect2.getDefaultDeviceSerialNumber();
 
     if (freenect2.enumerateDevices() == 0) {
-        std::cout << "no device connected!" << std::endl;
+        std::cout << "No device connected!" << std::endl;
         return -1;
     }
     pipeline = new libfreenect2::OpenGLPacketPipeline();
@@ -70,28 +115,32 @@ int main(int argc, char** argv) {
     int num_frames = 0;
 
     auto begin = std::chrono::high_resolution_clock::now();
-    std::string root_string = std::string("/home/uqmvale6/Desktop/img/");
-    std::string time_string = root_string + std::string("time/");
-    std::string color_string = root_string + std::string("color/");
-    std::string depth_string = root_string + std::string("depth/");
-    std::string map_string = root_string + std::string("map/");
-    std::string ext_string = std::string(".bin");
+
     while (!flag && num_frames < max_frames) {
         if (!listener.waitForNewFrame(frames, 10 * 1000)) {
             std::cout << "Timeout!" << std::endl;
             return -1;
         }
+
+        std::string color_filename = color_string + std::to_string(num_frames) + ext_string;
+        std::string depth_filename = depth_string + std::to_string(num_frames) + ext_string;
+        std::string map_filename = map_string + std::to_string(num_frames) + ext_string;
+        std::string time_filename = time_string + std::to_string(num_frames) + ext_string;
+
 	    auto now = std::chrono::high_resolution_clock::now() - begin;
 	    auto mill = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
 	    libfreenect2::Frame *color = frames[libfreenect2::Frame::Color];
         libfreenect2::Frame *depth = frames[libfreenect2::Frame::Depth];
         int* map = (int*)calloc(sizeof(int*), 512 * 424);
         registration->apply(color, depth, &undistorted, &registered, true, NULL, map);
-        FILE* f_color = fopen((color_string + std::to_string(num_frames) + ext_string).c_str(), "w+");
-        FILE* f_depth = fopen((depth_string +  std::to_string(num_frames) + ext_string).c_str(), "w+");
-        FILE* f_map = fopen((map_string + std::to_string(num_frames) + ext_string).c_str(), "w+");
-        FILE* f_time = fopen((time_string + std::to_string(num_frames) + ext_string).c_str(), "w+");
+
+        FILE* f_color = fopen(color_filename.c_str(), "w+");
+        FILE* f_depth = fopen(depth_filename.c_str(), "w+");
+        FILE* f_map = fopen(map_filename.c_str(), "w+");
+        FILE* f_time = fopen(time_filename.c_str(), "w+");
+
         if (!f_color || !f_depth || !f_map || !f_time) {
+            std::cout << "Invalid filename" << std::endl;
             break;
         }
 
