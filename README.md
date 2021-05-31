@@ -1,4 +1,18 @@
 # KinectStreamer
+## Description
+
+Driver for recording and viewing Kinect v2 streams.
+
+**Features**
+- **kinect_recorder** -> Recording to disk from Kinect v2
+- **kinect_viewer** -> Viewing binary files written by program
+- See chapter [Running Kinect](README.md#RunningKinect) below for usage
+
+## Acknowledgements
+- OpenKinect: libfreenect2
+    - https://github.com/OpenKinect/libfreenect2
+    - [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.50641.svg)](https://doi.org/10.5281/zenodo.50641)
+
 ## Prerequisites
 ### Dependencies
 ```console
