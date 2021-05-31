@@ -1,4 +1,0 @@
-/home/medrobotics/kinect_streamer/CMakeFiles/rebuild_cache.dir
-/home/medrobotics/kinect_streamer/CMakeFiles/edit_cache.dir
-/home/medrobotics/kinect_streamer/CMakeFiles/kinect_recorder.dir
-/home/medrobotics/kinect_streamer/CMakeFiles/kinect_viewer.dir
