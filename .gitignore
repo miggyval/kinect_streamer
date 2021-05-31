@@ -32,5 +32,6 @@
 kinect_viewer
 kinect_recorder
 
+cmake_install.cmake
 CMakeFiles/
 CMakeCache.txt
