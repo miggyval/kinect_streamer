@@ -35,28 +35,28 @@ git clone {repo}
 ```
 ## Building
 ```console
-# Go to kinect directory
-cd kinect
+# Go to kinect_viewer directory
+cd kinect_viewer
 # Run CMake command
 cmake -Dfreenect2_DIR=$HOME/freenect2/lib/cmake/freenect2 -DOpenCV_DIR=$HOME/opencv/build .
 # Run Makefile
 make -j`nproc`
 ```
 ## Running Kinect
-### Writing to Disk
+### Recording to Disk
 - WARNING: Recommended disk space - 10 MB per frame (approx 28 FPS)
 - Example Space: 1 hour -> 1 TB
 - Compress after session
 ```console
 # Usage
-./kinect_write <folder>
+./kinect_recorder <folder>
 # Example
-./kinect_write $HOME/Desktop/kinect_002/patient_x
+./kinect_recorder ${HOME}/Desktop/kinect_002/patient_x
 ```
-### Reading from Disk
+### Viewing from Disk
 ```console
 # Usage
-./kinect_read <folder>
+./kinect_viewer <folder>
 # Example
-./kinect_read $HOME/Desktop/kinect_002/patient_x
+./kinect_viewer ${HOME}/Desktop/kinect_002/patient_x
 ```
