@@ -7,15 +7,15 @@ set(CMAKE_DEPENDS_GENERATOR "Unix Makefiles")
 # The top level Makefile was generated from the following files:
 set(CMAKE_MAKEFILE_DEPENDS
   "CMakeCache.txt"
-  "/home/uqmvale6/freenect2/lib/cmake/freenect2/freenect2Config.cmake"
-  "/home/uqmvale6/freenect2/lib/cmake/freenect2/freenect2ConfigVersion.cmake"
-  "CMakeFiles/3.20.1/CMakeCCompiler.cmake"
-  "CMakeFiles/3.20.1/CMakeCXXCompiler.cmake"
-  "CMakeFiles/3.20.1/CMakeSystem.cmake"
+  "/home/medrobotics/freenect2/lib/cmake/freenect2/freenect2Config.cmake"
+  "/home/medrobotics/freenect2/lib/cmake/freenect2/freenect2ConfigVersion.cmake"
+  "CMakeFiles/3.20.2/CMakeCCompiler.cmake"
+  "CMakeFiles/3.20.2/CMakeCXXCompiler.cmake"
+  "CMakeFiles/3.20.2/CMakeSystem.cmake"
   "CMakeLists.txt"
-  "/home/uqmvale6/opencv/build/OpenCVConfig-version.cmake"
-  "/home/uqmvale6/opencv/build/OpenCVConfig.cmake"
-  "/home/uqmvale6/opencv/build/OpenCVModules.cmake"
+  "/home/medrobotics/opencv/build/OpenCVConfig-version.cmake"
+  "/home/medrobotics/opencv/build/OpenCVConfig.cmake"
+  "/home/medrobotics/opencv/build/OpenCVModules.cmake"
   "/usr/local/share/cmake-3.20/Modules/CMakeCInformation.cmake"
   "/usr/local/share/cmake-3.20/Modules/CMakeCXXInformation.cmake"
   "/usr/local/share/cmake-3.20/Modules/CMakeCommonLanguageInclude.cmake"
@@ -50,6 +50,6 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
-  "CMakeFiles/kinect_write.dir/DependInfo.cmake"
-  "CMakeFiles/kinect_read.dir/DependInfo.cmake"
+  "CMakeFiles/kinect_recorder.dir/DependInfo.cmake"
+  "CMakeFiles/kinect_viewer.dir/DependInfo.cmake"
   )

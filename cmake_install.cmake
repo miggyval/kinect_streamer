@@ -1,4 +1,4 @@
-# Install script for directory: /home/uqmvale6/kinect
+# Install script for directory: /home/medrobotics/kinect_streamer
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/uqmvale6/kinect/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/medrobotics/kinect_streamer/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

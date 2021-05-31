@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/uqmvale6/kinect/src/kinect_read.cpp" "CMakeFiles/kinect_read.dir/src/kinect_read.cpp.o" "gcc" "CMakeFiles/kinect_read.dir/src/kinect_read.cpp.o.d"
+  "/home/medrobotics/kinect/src/kinect_read.cpp" "CMakeFiles/kinect_read.dir/src/kinect_read.cpp.o" "gcc" "CMakeFiles/kinect_read.dir/src/kinect_read.cpp.o.d"
   )
 
 # Targets to which this target links.

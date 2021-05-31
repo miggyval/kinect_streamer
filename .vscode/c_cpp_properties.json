@@ -1,0 +1,41 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${HOME}/kinect_streamer/include",
+                "${HOME}/freenect2/include",
+                "${HOME}/opencv-master/modules/core/include",
+                "${HOME}/opencv-master/modules/highgui/include",
+                "${HOME}/opencv-master/modules/calib3d/include",
+                "${HOME}/opencv-master/modules/imgproc/include",
+                "${HOME}/opencv-master/modules/imgcodecs/include",
+                "${HOME}/opencv-master/modules/video/include",
+                "${HOME}/opencv-master/modules/dnn/include",
+                "${HOME}/opencv-master/modules/features2d/include",
+                "${HOME}/opencv-master/modules/flann/include",
+                "${HOME}/opencv-master/modules/gapi/include",
+                "${HOME}/opencv-master/modules/java/include",
+                "${HOME}/opencv-master/modules/js/include",
+                "${HOME}/opencv-master/modules/ml/include",
+                "${HOME}/opencv-master/modules/objc/include",
+                "${HOME}/opencv-master/modules/objdetect/include",
+                "${HOME}/opencv-master/modules/photo/include",
+                "${HOME}/opencv-master/modules/python/include",
+                "${HOME}/opencv-master/modules/stitching/include",
+                "${HOME}/opencv-master/modules/ts/include",
+                "${HOME}/opencv-master/modules/videoio/include",
+                "${HOME}/opencv-master/modules/jworld/include",
+                "${HOME}/opencv-master/include",
+                "${HOME}/opencv/build",
+                "${HOME}/argparse/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}
