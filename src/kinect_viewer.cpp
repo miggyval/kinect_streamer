@@ -127,6 +127,6 @@ int main(int argc, char** argv) {
         }
         num_frames++;
     }
-    destroyAllWindows();
+    cv::destroyAllWindows();
     return 0;
 }

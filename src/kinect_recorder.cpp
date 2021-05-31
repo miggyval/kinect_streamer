@@ -7,7 +7,7 @@
 #include <csignal>
 #include <cstdlib>
 #include <cstdio>
-#include <chrono>
+#include <chrono>   
 #include <unistd.h>
 #include <thread>
 #include <sys/types.h>
@@ -15,6 +15,7 @@
 #include <experimental/filesystem>
 #include <argparse/argparse.hpp>
 
+#define AEST (10)
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
@@ -35,8 +36,8 @@ static std::string root_string;
 static std::string time_string;
 static std::string color_string;
 static std::string depth_string;
-static std::string map_string;
 static std::string ext_string;
+static std::string timestamp_string;
 
 int flag = false;
 
@@ -102,6 +103,7 @@ int main(int argc, char** argv) {
     time_string = root_string + std::string("/time/");
     color_string = root_string + std::string("/color/");
     depth_string = root_string + std::string("/depth/");
+    timestamp_string = root_string + std::string("/timestamp.txt");
     ext_string = std::string(".bin");
 
     int num_frames = 0;
@@ -192,8 +194,26 @@ int main(int argc, char** argv) {
     }
     
     auto begin = std::chrono::high_resolution_clock::now();
-    
+
+    time_t rawtime;
+    struct tm * ptm;
+    time ( &rawtime );
+    ptm = gmtime ( &rawtime );
+    FILE* f_timestamp = fopen(timestamp_string.c_str(), "w+");
+
+    fprintf(f_timestamp,
+        "Start Time (AEST): %04d-%02d-%02d %02d:%02d:%2d\n",
+        (ptm->tm_year + 1900), // Year
+        (ptm->tm_mon + 1), // Month
+        (ptm->tm_mday), // Day
+        (ptm->tm_hour + AEST) % 24, // Hour
+        (ptm->tm_min), // Minute
+        (ptm->tm_sec) // Second
+    );
+
+
     signal(SIGINT, my_handler);
+
     
     while (!flag) {
         auto current_start = std::chrono::high_resolution_clock::now();
@@ -231,6 +251,7 @@ int main(int argc, char** argv) {
 
             fclose(f_color);
             fclose(f_depth);
+            
         } else {
             Mat img_color;
             cap.read(img_color);
