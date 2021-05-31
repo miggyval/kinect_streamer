@@ -1,4 +1,26 @@
 # KinectStreamer
+
+## Table of Contents
+* [**Description**](README.md#description)
+* [**Acknowledgements**](README.md#acknowledgements)
+* [**Prerequisites**](README.md#prerequisites)
+* [**Downloading**](README.md#downloading)
+* [**Building**](README.md#building)
+* [**Running KinectStreamer**](README.md#running-kinectstreamer)
+## Description
+
+Driver for recording and viewing Kinect v2 streams.
+
+**Features**
+- **kinect_recorder** -> Recording to disk from Kinect v2
+- **kinect_viewer** -> Viewing binary files written by program
+- See chapter [Running Kinect](README.md#running-kinect) below for usage
+
+## Acknowledgements
+- OpenKinect: libfreenect2
+    - https://github.com/OpenKinect/libfreenect2
+    - [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.50641.svg)](https://doi.org/10.5281/zenodo.50641)
+
 ## Prerequisites
 ### Dependencies
 ```console
@@ -34,9 +56,25 @@ Follow instructions from morrisfranken
 https://github.com/morrisfranken/argparse
 
 ## Downloading
+
+Through https
 ```console
 git clone https://github.com/uqmvale6/kinect_streamer.git
 ```
+Through ssh
+```console
+git clone git@github.com:uqmvale6/kinect_streamer.git
+```
+
+Through wget
+```console
+wget -O main.zip https://github.com/uqmvale6/kinect_streamer/archive/refs/heads/main.zip
+unzip main.zip
+mv kinect_streamer-main kinect_streamer
+```
+Through zip download
+- https://github.com/uqmvale6/kinect_streamer/archive/refs/heads/main.zip
+
 ## Building
 ```console
 # Go to kinect_viewer directory
@@ -49,7 +87,7 @@ cmake .
 # Run Makefile
 make -j`nproc`
 ```
-## Running Kinect
+## Running Kinect Streamer
 ### Recording to Disk
 - WARNING: Recommended disk space - 10 MB per frame (approx 28 FPS)
 - Example Space: 1 hour -> 1 TB
