@@ -9,15 +9,25 @@
 #include <cstdio>
 #include <chrono>
 #include <unistd.h>
+#include <thread>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <experimental/filesystem>
 #include <argparse/argparse.hpp>
 
 struct KinectRecorderArgs : public argparse::Args {
-    std::string &src_path = arg("save directory path");
+    std::string &src_path = arg("directory path for recorded data");
+    int &fps = kwarg("f,framerate", "framerate (fps)").set_default(15);
     bool &webcam = flag("w,webcam", "use webcam instead of kinect").set_default(false);
 };
+
+
+static std::string root_string;
+static std::string time_string;
+static std::string color_string;
+static std::string depth_string;
+static std::string map_string;
+static std::string ext_string;
 
 int flag = false;
 
@@ -40,44 +50,106 @@ void iter_delete(fs::path path) {
     std::cin.ignore();
 }
 
-int main(int argc, char** argv) {
+int yn_func() {
+    std::string yn;
+    std::cin >> yn;
+    if (yn == std::string("Y") || yn == std::string("y")) {
+        return 1;
+    } else if (yn == std::string("N") || yn == std::string("n")) {
+        return -1;
+    } else {
+        return 0;
+    }
+}
 
+
+
+void decision(void (*yf)(void), void (*nf)(void)) {
+    int yn = 0;
+    while (!yn) {
+        yn = yn_func();
+        if (yn == 1) {
+            yf();
+        } else if (yn == -1) {
+            nf();
+        }
+    }
+}
+
+/***
+ * 
+ */
+int main(int argc, char** argv) {
+ 
     KinectRecorderArgs args = argparse::parse<KinectRecorderArgs>(argc, argv);
 
     signal(SIGINT, pre_handler);
 
-    std::string root_string = std::string(argv[1]);
-    std::string time_string = root_string + std::string("/time/");
-    std::string color_string = root_string + std::string("/color/");
-    std::string depth_string = root_string + std::string("/depth/");
-    std::string map_string = root_string + std::string("/map/");
-    std::string ext_string = std::string(".bin");
-
-
-    if (fs::exists(fs::path(root_string.c_str()))) {
-        std::cout << "Folder already exists." << std::endl;
-        std::cout << "Would you like to overwrite the data? [Y/n]" << std::endl;
-        std::string yn;
-        while (true) {
-            std::cin >> yn;
-            if (yn == std::string("Y") || yn == std::string("y")) {
-                break;
-            } else if (yn == std::string("N") || yn == std::string("n")) {
-                exit(1);
-            }
-            std::cout << "Please try again." << std::endl;
-        }
-        std::cout << "Erasing ALL contents of " << root_string << std::endl;
-        iter_delete("");
-    } else {
-        std::cout << "Creating folder: " << root_string << std::endl;
-        bool root_check = fs::create_directories(fs::path(root_string));
+    const int fps = args.fps;
+    if (fps <= 0 || fps > 30) {
+        std::cout << "The framerate is invalid." << std::endl;
+        std::cout << "Please choose a framerate between 1 and 30. (inclusive)" << std::endl;
+        exit(-1);
     }
 
-    int color_check = mkdir(color_string.c_str(), 0777);
-    int depth_check = mkdir(depth_string.c_str(), 0777);
-    int map_check = mkdir(map_string.c_str(), 0777);
-    int time_check = mkdir(time_string.c_str(), 0777);
+    root_string = args.src_path;
+    time_string = root_string + std::string("/time/");
+    color_string = root_string + std::string("/color/");
+    depth_string = root_string + std::string("/depth/");
+    map_string = root_string + std::string("/map/");
+    ext_string = std::string(".bin");
+
+    int num_frames = 0;
+    const int period = (int)(1000.0 / (double)fps);
+
+    if (fs::exists(fs::path(root_string))) {
+        if (!fs::is_directory(root_string)) {
+            std::cout << "Not a valid directory." << std::endl;
+            exit(-1);
+        }
+        std::cout << "The following folder already exists:" << root_string << std::endl;
+        if (!fs::is_empty(root_string)) {
+            std::cout << "Would you like to delete the following subfolders? [Y/n]" << std::endl;
+            std::cout << "\t- " << time_string << std::endl;
+            std::cout << "\t- " << color_string << std::endl;
+            std::cout << "\t- " << depth_string << std::endl;
+            std::cout << "\t- " << map_string << std::endl;
+            auto lambda = [](void) {
+                std::cout << "Deleting folder: " << time_string << std::endl;
+                fs::remove_all(time_string);
+                std::cout << "Deleting folder: " << color_string << std::endl;
+                fs::remove_all(color_string);
+                std::cout << "Deleting folder: " << depth_string << std::endl;
+                fs::remove_all(depth_string);
+                std::cout << "Deleting folder: " << map_string << std::endl;
+                fs::remove_all(map_string);
+            };
+            decision(lambda, [](void) {exit(-1);});
+        }
+    } else {
+        std::cout << "The following folder does not exist: " << root_string << std::endl;
+        std::cout << "Would you like to create this folder? [Y/n]" << std::endl;
+        decision([](void) {std::cout << "Creating folder: " << root_string << std::endl;}, [](void) {exit(1);} );
+        bool root_check = fs::create_directories(fs::path(root_string));
+    }   
+
+    std::cout << "Would you like to create the following folders? [Y/n]" << std::endl;
+    std::cout << "\t- " << time_string << std::endl;
+    std::cout << "\t- " << color_string << std::endl;
+    std::cout << "\t- " << depth_string << std::endl;
+    std::cout << "\t- " << map_string << std::endl;
+    
+    auto lambda = [](void) {
+        std::cout << "Creating folder: " << time_string << std::endl;
+        int time_check = mkdir(time_string.c_str(), 0777);
+        std::cout << "Creating folder: " << color_string << std::endl;
+        int color_check = mkdir(color_string.c_str(), 0777);
+        std::cout << "Creating folder: " << depth_string << std::endl;
+        int depth_check = mkdir(depth_string.c_str(), 0777);
+        std::cout << "Creating folder: " << map_string << std::endl;
+        int map_check = mkdir(map_string.c_str(), 0777);
+    };
+    decision(lambda, [](void) {exit(-1);});
 
     std::string serial = "";
 
@@ -109,15 +181,13 @@ int main(int argc, char** argv) {
     libfreenect2::Frame undistorted(512, 424, 4);
     libfreenect2::Frame registered(512, 424, 4);
     signal(SIGINT, my_handler);
-    const int fps = 15;
-    const int seconds = 60 * 30;
-    const int max_frames = fps * seconds;
-    int num_frames = 0;
-
     auto begin = std::chrono::high_resolution_clock::now();
-
-    while (!flag && num_frames < max_frames) {
-        if (!listener.waitForNewFrame(frames, 10 * 1000)) {
+    std::string start_filename = root_string + std::string("start.txt");
+    FILE* f_start = fopen(start_filename.c_str(), "w+");
+    
+    while (!flag) {
+        auto current_start = std::chrono::high_resolution_clock::now();
+        if (!listener.waitForNewFrame(frames, 1000)) {
             std::cout << "Timeout!" << std::endl;
             return -1;
         }
@@ -156,6 +226,12 @@ int main(int argc, char** argv) {
         fclose(f_map);
         num_frames++;
         listener.release(frames);
+        auto current_end = std::chrono::high_resolution_clock::now();
+        auto current_duration = std::chrono::duration_cast<std::chrono::milliseconds>(current_end - current_start);
+        while (current_duration.count() < period) {
+            current_end = std::chrono::high_resolution_clock::now();
+            current_duration = std::chrono::duration_cast<std::chrono::milliseconds>(current_end - current_start);
+        }
     }
     auto end = std::chrono::high_resolution_clock::now();    
     auto duration = end - begin;
