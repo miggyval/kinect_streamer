@@ -65,6 +65,13 @@ Through ssh
 ```console
 git clone git@github.com:uqmvale6/kinect_streamer.git
 ```
+
+Through wget
+```console
+wget -O main.zip https://github.com/uqmvale6/kinect_streamer/archive/refs/heads/main.zip
+unzip main.zip
+mv kinect_streamer-main kinect_streamer
+```
 Through zip download
 - https://github.com/uqmvale6/kinect_streamer/archive/refs/heads/main.zip
 
