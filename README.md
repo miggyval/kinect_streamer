@@ -29,6 +29,10 @@ cmake --build .
 Follow instructions on OpenKinect GitHub
 https://github.com/OpenKinect/libfreenect2
 
+### Installing argparse
+Follow instructions from morrisfranken
+https://github.com/morrisfranken/argparse
+
 ## Downloading
 ```console
 git clone {repo}
