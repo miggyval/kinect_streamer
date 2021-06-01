@@ -6,7 +6,7 @@
 * [**Prerequisites**](README.md#prerequisites)
 * [**Downloading**](README.md#downloading)
 * [**Building**](README.md#building)
-* [**Running KinectStreamer**](README.md#running-kinectstreamer)
+* [**Running KinectStreamer**](README.md#running-kinect-streamer)
 ## Description
 
 Driver for recording and viewing Kinect v2 streams.
