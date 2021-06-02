@@ -41,8 +41,12 @@ sudo apt install build-essential cmake git pkg-config libgtk-3-dev \
 sudo apt update && sudo apt install -y cmake g++ wget unzip
 ```
 ```console
-# Download and unpack sources
-wget -O opencv.zip https://github.com/opencv/opencv/archive/master.zip && unzip opencv.zip
+# Download sources
+wget -O opencv.zip https://github.com/opencv/opencv/archive/master.zip
+```
+```console
+# Unpack sources
+unzip opencv.zip
 ```
 ```console
 # Create build directory
