@@ -35,15 +35,24 @@ sudo apt install build-essential cmake git pkg-config libgtk-3-dev \
     gfortran openexr libatlas-base-dev python3-dev python3-numpy \
     libtbb2 libtbb-dev libdc1394-22-dev libopenexr-dev \
     libgstreamer-plugins-base1.0-dev libgstreamer1.0-dev
+```
+```console
 # Install minimal prerequisites (Ubuntu 18.04 as reference)
 sudo apt update && sudo apt install -y cmake g++ wget unzip
+```
+```console
 # Download and unpack sources
-wget -O opencv.zip https://github.com/opencv/opencv/archive/master.zip
-unzip opencv.zip
+wget -O opencv.zip https://github.com/opencv/opencv/archive/master.zip && unzip opencv.zip
+```
+```console
 # Create build directory
 mkdir -p ~/opencv/build && cd ~/opencv/build
+```
+```console
 # Configure
 cmake  ../../opencv-master
+```
+```console
 # Build
 cmake --build .
 ```
