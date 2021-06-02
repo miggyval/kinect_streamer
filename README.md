@@ -90,8 +90,8 @@ Through zip download
 
 ## Building
 ```console
-# Go to kinect_viewer directory
-cd kinect_viewer
+# Go to kinect_streamer directory
+cd kinect_streamer
 # (Optional) Set library directories in CMakeLists.txt for alternate installations
 set(freenect2_DIR <PATH>)
 set(OpenCV_DIR <PATH>)
