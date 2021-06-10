@@ -33,7 +33,10 @@ private:
 public:
     KinectDevice();
     ~KinectDevice();
-    void get_frame();
+    libfreenect2::Frame* get_frame(libfreenect2::Frame::Type type);
+    void release_frames();
+    void start();
+    void stop();
 };
 }
 

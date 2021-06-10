@@ -29,7 +29,7 @@ link_directories(
 
 add_executable( kinect_recorder ${CMAKE_SOURCE_DIR}/src/kinect_recorder.cpp )
 add_executable( kinect_viewer ${CMAKE_SOURCE_DIR}/src/kinect_viewer.cpp )
-add_executable( kinect_recorder_gui ${CMAKE_SOURCE_DIR}/src/kinect_recorder_gui.c )
+add_executable( kinect_recorder_gui ${CMAKE_SOURCE_DIR}/src/kinect_recorder_gui.cpp )
 add_executable( kinect_test ${CMAKE_SOURCE_DIR}/src/kinect_test.cpp)
 
 
@@ -42,5 +42,6 @@ target_link_libraries( kinect_test ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${GTK3_
 set_target_properties( kinect_recorder PROPERTIES CXX_STANDARD 17 )
 set_target_properties( kinect_viewer PROPERTIES CXX_STANDARD 17 )
 set_target_properties( kinect_test PROPERTIES CXX_STANDARD 17 )
+set_target_properties( kinect_recorder_gui PROPERTIES CXX_STANDARD 17 )
 
 add_compile_options(${GTK3_CFLAGS_OTHER})

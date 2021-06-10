@@ -1,10 +1,27 @@
 #include <gtk/gtk.h>
+#include <thread>
+#include <kinect_streamer/kinect_streamer.hpp>
+#include <gdk-pixbuf/gdk-pixbuf.h>
+
+
+#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+
+#include <unistd.h>
+#include <stdio.h>
+
+using namespace cv;
 
 
 typedef struct ButtonData {
     GtkWindow* window;
     GtkEntry* entry;
 } ButtonData;
+
+typedef struct EntryData {
+    GtkEntry* entry;
+} EntryData;
 
 /* Create a new hbox with an image and a label packed into it
  * and return the box. */
@@ -35,13 +52,21 @@ static GtkBox* xpm_label_box(gchar* xpm_filename, gchar* label_text) {
 }
 
 
-static void callback_start(GtkWidget* widget, gpointer userdata) {
+static void callback_start(GtkWidget* widget, gpointer user_data) {
     printf("Start!\n\r");
+    EntryData* entry_data = (EntryData*)user_data;
+    GtkEntry* entry = entry_data->entry;
+    char* text = (char*)gtk_entry_get_text(entry);
+    std::cout << text << std::endl;
+    char* args[] = {"./bin/kinect_recorder", text, NULL};
+    execvp(args[0], args);
 }
 
-static void callback_stop(GtkWidget* widget, gpointer userdata) {
+static void callback_stop(GtkWidget* widget, gpointer user_data) {
     printf("Stop!\n\r");
+    *(int*)user_data = false;
 }
+
 
 static void callback_select_folder(GtkWidget* widget, gpointer user_data) {
     GtkFileChooser* file_chooser;
@@ -58,6 +83,7 @@ static void callback_select_folder(GtkWidget* widget, gpointer user_data) {
                                       ("_Select Folder"),
                                       GTK_RESPONSE_ACCEPT,
                                       NULL);
+    gtk_file_chooser_set_current_folder(file_chooser, ".");
     res = gtk_dialog_run((GtkDialog*)file_chooser);
     if (res == GTK_RESPONSE_ACCEPT) {
         char* filename = gtk_file_chooser_get_filename(file_chooser);
@@ -67,7 +93,8 @@ static void callback_select_folder(GtkWidget* widget, gpointer user_data) {
     gtk_widget_destroy((GtkWidget*)file_chooser);
 }
 
-int main(int argc, char** argv ) {
+int main(int argc, char** argv) {
+
     /* GtkWidget is the storage type for widgets */
     GtkBox* vbox;
     GtkBox* hbox;
@@ -75,7 +102,9 @@ int main(int argc, char** argv ) {
     GtkButton* button_folder;
     GtkButton* button_start;
     GtkButton* button_stop;
-    GtkBox* box;
+    GtkBox* box_folder;
+    GtkBox* box_start;
+    GtkBox* box_stop;
     GtkEntry* entry;
     GtkLabel* label_select;
 
@@ -97,7 +126,7 @@ int main(int argc, char** argv ) {
     gtk_window_set_title(window, "Buttons!");
 
     /* Set the window size */
-    gtk_window_set_default_size(window, 1280, 720);
+    gtk_window_set_default_size(window, 300, 200);
 
     /* It's a good idea to do this for all windows. */
     g_signal_connect((GtkWidget*)window, "destroy", (GCallback)gtk_main_quit, NULL);
@@ -108,60 +137,63 @@ int main(int argc, char** argv ) {
     gtk_container_set_border_width((GtkContainer*)window, 20);
 
 
+    char* current_path;
+    char* ptr;
+    if ((current_path = (char*)malloc((size_t)1024)) != NULL) {
+        ptr = getcwd(current_path, (size_t)1024);
+        gtk_entry_set_text(entry, current_path);
+        free(current_path);
+    }
+
     ButtonData button_data = (ButtonData){window, entry};
+    EntryData entry_data = (EntryData){entry};
 
     /* Connect the "clicked" signal of the button to our callback */
     g_signal_connect(button_folder, "clicked", (GCallback)callback_select_folder, (gpointer)(&button_data));
-    g_signal_connect(button_start, "clicked", (GCallback)callback_start, NULL);
+    g_signal_connect(button_start, "clicked", (GCallback)callback_start, (gpointer)(&entry_data));
     g_signal_connect(button_stop, "clicked", (GCallback)callback_stop, NULL);
 
     /* This calls our box creating function */
-    box = xpm_label_box("folder.xpm", "Select Folder");
+    box_folder = xpm_label_box("folder.xpm", "Select Folder");
+    box_start = xpm_label_box("folder.xpm", "Start");
+    box_stop = xpm_label_box("folder.xpm", "Stop");
 
     vbox = (GtkBox*)gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     hbox = (GtkBox*)gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 
-
-    gtk_container_set_border_width((GtkContainer*)vbox, 10);
+    gtk_box_pack_start(hbox, (GtkWidget*)button_start, FALSE, FALSE, 10);
+    gtk_box_pack_start(hbox, (GtkWidget*)button_stop, FALSE, FALSE, 10);
 
     gtk_box_pack_start(vbox, (GtkWidget*)label_select, FALSE, FALSE, 10);
-
     gtk_box_pack_start(vbox, (GtkWidget*)button_folder, FALSE, FALSE, 10);
-
     gtk_box_pack_start(vbox, (GtkWidget*)entry, FALSE, FALSE, 10);
+    gtk_box_pack_start(vbox, (GtkWidget*)hbox, FALSE, FALSE, 10);
 
     gtk_container_add((GtkContainer*)window, (GtkWidget*)vbox);
-
-    gtk_container_add((GtkContainer*)button_folder, (GtkWidget*)box);
+    gtk_container_add((GtkContainer*)button_folder, (GtkWidget*)box_folder);
+    gtk_container_add((GtkContainer*)button_start, (GtkWidget*)box_start);
+    gtk_container_add((GtkContainer*)button_stop, (GtkWidget*)box_stop);
 
     /* Pack and show all our widgets */
 
-    gtk_widget_show((GtkWidget*)box);
+    gtk_widget_show((GtkWidget*)box_folder);
+    gtk_widget_show((GtkWidget*)box_start);
+    gtk_widget_show((GtkWidget*)box_stop);
 
     gtk_widget_show((GtkWidget*)vbox);
+    gtk_widget_show((GtkWidget*)hbox);
 
     gtk_widget_show((GtkWidget*)label_select);
-
+    
     gtk_widget_show((GtkWidget*)entry);
 
     gtk_widget_show((GtkWidget*)button_folder);
+    gtk_widget_show((GtkWidget*)button_start);
+    gtk_widget_show((GtkWidget*)button_stop);
 
     gtk_widget_show((GtkWidget*)window);
 
     /* Rest in gtk_main and wait for the fun to begin! */
-    gtk_main ();
-
+    gtk_main();
     return 0;
 }
-
-/*
-int main (int argc, char **argv) {
-  GtkApplication *app;
-  int status;
-  app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE);
-  g_signal_connect(app, "activate", G_CALLBACK (activate), NULL);
-  status = g_application_run(G_APPLICATION (app), argc, argv);
-  g_object_unref(app);
-  return status;
-}
-*/

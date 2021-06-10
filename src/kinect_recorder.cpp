@@ -88,6 +88,8 @@ void decision(void (*yf)(void), void (*nf)(void)) {
 int main(int argc, char** argv) {
  
     KinectRecorderArgs args = argparse::parse<KinectRecorderArgs>(argc, argv);
+    namedWindow("Color", WINDOW_NORMAL);
+    resizeWindow("Color", Size(1280, 720));
 
     signal(SIGINT, pre_handler);
 
@@ -242,6 +244,10 @@ int main(int argc, char** argv) {
             }
             libfreenect2::Frame *color = frames[libfreenect2::Frame::Color];
             libfreenect2::Frame *depth = frames[libfreenect2::Frame::Depth];
+            Mat img_color(Size(color->width, color->height), CV_8UC4, color->data);
+            cvtColor(img_color, img_color, COLOR_BGRA2BGR);
+            imshow("Color", img_color);
+            waitKey(1);
 
             fwrite(color->data, color->bytes_per_pixel, color->width * color->height, f_color);
             fwrite(depth->data, depth->bytes_per_pixel, depth->width * depth->height, f_depth);
@@ -263,6 +269,8 @@ int main(int argc, char** argv) {
             Mat img_resized;
             resize(img_converted, img_resized, Size(COLOR_W, COLOR_H));
             Mat img_depth = Mat::zeros(Size(DEPTH_W, DEPTH_H), CV_32FC1);
+            imshow("Color", img_resized);
+            waitKey(1);
             fwrite(img_resized.data, img_resized.elemSize(), img_resized.cols * img_resized.rows, f_color);
             fwrite(img_depth.data, img_depth.elemSize(), img_depth.cols * img_resized.rows, f_depth);
             fclose(f_color);
