@@ -14,7 +14,6 @@
 #include <sys/stat.h>
 #include <experimental/filesystem>
 #include <argparse/argparse.hpp>
-
 #define AEST (10)
 
 #include <opencv2/opencv.hpp>

@@ -18,14 +18,23 @@
 #define DEPTH_MAX 2000.0
 #define FPS_MAX 30
 
+namespace KinectStreamer {
+
 
 class KinectDevice {
 private:
     libfreenect2::Freenect2* freenect2;
     libfreenect2::Freenect2Device *dev;
     libfreenect2::PacketPipeline *pipeline;
+    libfreenect2::Registration* registration;
+    libfreenect2::SyncMultiFrameListener* listener;
+    std::string serial;
+    libfreenect2::FrameMap frames;
 public:
     KinectDevice();
+    ~KinectDevice();
+    void get_frame();
 };
+}
 
 #endif
