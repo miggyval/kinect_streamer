@@ -15,6 +15,7 @@
 #include <experimental/filesystem>
 #include <argparse/argparse.hpp>
 #define AEST (10)
+#define ESC 33
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
@@ -215,7 +216,7 @@ int main(int argc, char** argv) {
 
     signal(SIGINT, my_handler);
 
-    
+    std::chrono::milliseconds pause_time = std::chrono::milliseconds(0);
     while (!flag) {
         auto current_start = std::chrono::high_resolution_clock::now();
 
@@ -247,8 +248,28 @@ int main(int argc, char** argv) {
             Mat img_color(Size(color->width, color->height), CV_8UC4, color->data);
             cvtColor(img_color, img_color, COLOR_BGRA2BGR);
             imshow("Color", img_color);
-            waitKey(1);
-
+            char c = waitKey(1);
+            if (c == ' ' || c == 'p') {
+                auto start_pause = std::chrono::high_resolution_clock::now();
+                c = waitKey(1);
+                while (c != ' ' && c != 'p') {
+                    if (c == 'q' || c == ESC) {
+                        std::cout << "Quitting!" << std::endl;
+                        flag = true;
+                        break;
+                    }
+                    Mat img_paused = img_color * 0.3;
+                    putText(img_paused, "PAUSED", Point(COLOR_W / 2 - 128, COLOR_H / 2 - 10), FONT_HERSHEY_PLAIN,  5, Scalar(128, 128, 128), 2);
+                    imshow("Color", img_paused);
+                    c = waitKey(1);
+                }
+                auto end_pause = std::chrono::high_resolution_clock::now();
+                auto duration_pause = std::chrono::duration_cast<std::chrono::milliseconds>(end_pause - start_pause);
+                pause_time += duration_pause;
+            } else if (c == 'q' || c == ESC) {
+                flag = true;
+                std::cout << "Quitting!" << std::endl;
+            }
             fwrite(color->data, color->bytes_per_pixel, color->width * color->height, f_color);
             fwrite(depth->data, depth->bytes_per_pixel, depth->width * depth->height, f_depth);
 
@@ -270,7 +291,28 @@ int main(int argc, char** argv) {
             resize(img_converted, img_resized, Size(COLOR_W, COLOR_H));
             Mat img_depth = Mat::zeros(Size(DEPTH_W, DEPTH_H), CV_32FC1);
             imshow("Color", img_resized);
-            waitKey(1);
+            char c = waitKey(1);
+            if (c == ' ' || c == 'p') {
+                auto start_pause = std::chrono::high_resolution_clock::now();
+                c = waitKey(1);
+                while (c != ' ' && c != 'p') {
+                    if (c == 'q' || c == ESC) {
+                        std::cout << "Quitting!" << std::endl;
+                        flag = true;
+                        break;
+                    }
+                    Mat img_paused = img_resized * 0.3;
+                    putText(img_paused, "PAUSED", Point(COLOR_W / 2 - 128, COLOR_H / 2 - 10), FONT_HERSHEY_PLAIN,  5, Scalar(128, 128, 128), 2);
+                    imshow("Color", img_paused);
+                    c = waitKey(1);
+                }
+                auto end_pause = std::chrono::high_resolution_clock::now();
+                auto duration_pause = std::chrono::duration_cast<std::chrono::milliseconds>(end_pause - start_pause);
+                pause_time += duration_pause;
+            } else if (c == 'q' || c == ESC) {
+                flag = true;
+                std::cout << "Quitting!" << std::endl;
+            }
             fwrite(img_resized.data, img_resized.elemSize(), img_resized.cols * img_resized.rows, f_color);
             fwrite(img_depth.data, img_depth.elemSize(), img_depth.cols * img_resized.rows, f_depth);
             fclose(f_color);
@@ -285,7 +327,7 @@ int main(int argc, char** argv) {
         }
     }
     auto end = std::chrono::high_resolution_clock::now();    
-    auto duration = end - begin;
+    auto duration = end - begin - pause_time;
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
     std::cout << "Time = " << ms << " ms" << std::endl;
     std::cout << "Frames = " << num_frames << std::endl;

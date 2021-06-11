@@ -57,7 +57,7 @@ static void callback_start(GtkWidget* widget, gpointer user_data) {
     GtkEntry* entry = entry_data->entry;
     char* text = (char*)gtk_entry_get_text(entry);
     std::cout << text << std::endl;
-    char* args[] = {"./bin/kinect_recorder", text, NULL};
+    char* args[] = {"./bin/kinect_viewer", text, NULL};
     execvp(args[0], args);
 }
 
@@ -68,7 +68,7 @@ static void callback_select_folder(GtkWidget* widget, gpointer user_data) {
     GtkWindow* window = button_data->window;
     GtkEntry* entry = button_data->entry;
     gint res;
-    file_chooser = (GtkFileChooser*)gtk_file_chooser_dialog_new("Select folder to save data",
+    file_chooser = (GtkFileChooser*)gtk_file_chooser_dialog_new("Select folder to read data",
                                       window,
                                       action,
                                       ("_Cancel"),
@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
     button_start = (GtkButton*)gtk_button_new();
 
     /* Set the window title */
-    gtk_window_set_title(window, "Kinect Recorder GUI");
+    gtk_window_set_title(window, "Kinect Viewer GUI");
 
     /* Set the window size */
     gtk_window_set_default_size(window, 400, 300);

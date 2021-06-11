@@ -30,6 +30,7 @@ link_directories(
 add_executable( kinect_recorder ${CMAKE_SOURCE_DIR}/src/kinect_recorder.cpp )
 add_executable( kinect_viewer ${CMAKE_SOURCE_DIR}/src/kinect_viewer.cpp )
 add_executable( kinect_recorder_gui ${CMAKE_SOURCE_DIR}/src/kinect_recorder_gui.cpp )
+add_executable( kinect_viewer_gui ${CMAKE_SOURCE_DIR}/src/kinect_viewer_gui.cpp )
 add_executable( kinect_test ${CMAKE_SOURCE_DIR}/src/kinect_test.cpp)
 
 
@@ -37,11 +38,13 @@ target_link_libraries( kinect_recorder ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${k
 target_link_libraries( kinect_viewer ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${kinect_streamer_LIBS} stdc++fs)
 
 target_link_libraries( kinect_recorder_gui ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${GTK3_LIBRARIES}  ${kinect_streamer_LIBS} stdc++fs )
+target_link_libraries( kinect_viewer_gui ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${GTK3_LIBRARIES}  ${kinect_streamer_LIBS} stdc++fs )
 target_link_libraries( kinect_test ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${GTK3_LIBRARIES} ${kinect_streamer_LIBS} stdc++fs )
 
 set_target_properties( kinect_recorder PROPERTIES CXX_STANDARD 17 )
 set_target_properties( kinect_viewer PROPERTIES CXX_STANDARD 17 )
 set_target_properties( kinect_test PROPERTIES CXX_STANDARD 17 )
 set_target_properties( kinect_recorder_gui PROPERTIES CXX_STANDARD 17 )
+set_target_properties( kinect_viewer_gui PROPERTIES CXX_STANDARD 17 )
 
 add_compile_options(${GTK3_CFLAGS_OTHER})
