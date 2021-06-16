@@ -20,7 +20,8 @@ typedef struct ButtonData {
 } ButtonData;
 
 typedef struct EntryData {
-    GtkEntry* entry;
+    GtkEntry* entry_folder;
+    GtkEntry* entry_fps;
 } EntryData;
 
 /* Create a new hbox with an image and a label packed into it
@@ -33,7 +34,7 @@ static GtkBox* xpm_label_box(gchar* xpm_filename, gchar* label_text) {
 
     /* Create box for image and label */
     box = (GtkBox*)gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    gtk_container_set_border_width((GtkContainer*)box, 20);
+    gtk_container_set_border_width((GtkContainer*)box, 2);
 
     /* Now on to the image stuff */
     image = (GtkImage*)gtk_image_new_from_file(xpm_filename);
@@ -42,8 +43,8 @@ static GtkBox* xpm_label_box(gchar* xpm_filename, gchar* label_text) {
     label = (GtkLabel*)gtk_label_new(label_text);
 
     /* Pack the image and label into the box */
-    gtk_box_pack_start(box, (GtkWidget*)image, FALSE, FALSE, 10);
-    gtk_box_pack_start(box, (GtkWidget*)label, FALSE, FALSE, 10);
+    gtk_box_pack_start(box, (GtkWidget*)image, FALSE, FALSE, 2);
+    gtk_box_pack_start(box, (GtkWidget*)label, FALSE, FALSE, 2);
 
     gtk_widget_show((GtkWidget*)image);
     gtk_widget_show((GtkWidget*)label);
@@ -54,10 +55,15 @@ static GtkBox* xpm_label_box(gchar* xpm_filename, gchar* label_text) {
 
 static void callback_start(GtkWidget* widget, gpointer user_data) {
     EntryData* entry_data = (EntryData*)user_data;
-    GtkEntry* entry = entry_data->entry;
-    char* text = (char*)gtk_entry_get_text(entry);
-    std::cout << text << std::endl;
-    char* args[] = {"./bin/kinect_recorder", text, NULL};
+    GtkEntry* entry_folder = entry_data->entry_folder;
+    GtkEntry* entry_fps = entry_data->entry_fps;
+    char* text_folder = (char*)gtk_entry_get_text(entry_folder);
+    char* text_fps = (char*)gtk_entry_get_text(entry_fps);
+    char* args[] = {"./bin/kinect_recorder", text_folder, "-f", text_fps, NULL};
+    for (int i = 0; i < 4; i++) {
+        std::cout << args[i] << " ";
+    }
+    std::cout << std::endl;
     execvp(args[0], args);
 }
 
@@ -90,27 +96,36 @@ int main(int argc, char** argv) {
 
     /* GtkWidget is the storage type for widgets */
     GtkBox* vbox;
-    GtkBox* hbox;
+    GtkBox* hbox_folder;
+    GtkBox* hbox_fps;
+    GtkBox* hbox_start;
     GtkWindow* window;
     GtkButton* button_folder;
     GtkButton* button_start;
     GtkBox* box_folder;
     GtkBox* box_start;
-    GtkEntry* entry;
-    GtkLabel* label_select;
+    GtkEntry* entry_folder;
+    GtkEntry* entry_fps;
+    GtkLabel* label_folder;
+    GtkLabel* label_fps;
+    GtkLabel* label_space;
 
     gtk_init (&argc, &argv);
 
     /* Create a new window */
     window = (GtkWindow*)gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
-    label_select = (GtkLabel*)gtk_label_new("Select a folder to store data:");
+    label_folder    = (GtkLabel*)gtk_label_new("Select a folder to store data:");
+    label_fps       = (GtkLabel*)gtk_label_new("FPS:");
+    label_space     = (GtkLabel*)gtk_label_new(" ");
 
-    entry = (GtkEntry*)gtk_entry_new();
+    /* Create entries */
+    entry_folder    = (GtkEntry*)gtk_entry_new();
+    entry_fps       = (GtkEntry*)gtk_entry_new();
 
     /* Create buttons*/
-    button_folder = (GtkButton*)gtk_button_new();
-    button_start = (GtkButton*)gtk_button_new();
+    button_folder   = (GtkButton*)gtk_button_new();
+    button_start    = (GtkButton*)gtk_button_new();
 
     /* Set the window title */
     gtk_window_set_title(window, "Kinect Recorder GUI");
@@ -131,12 +146,13 @@ int main(int argc, char** argv) {
     char* ptr;
     if ((current_path = (char*)malloc((size_t)1024)) != NULL) {
         ptr = getcwd(current_path, (size_t)1024);
-        gtk_entry_set_text(entry, current_path);
+        gtk_entry_set_text(entry_folder, current_path);
         free(current_path);
     }
+    gtk_entry_set_text(entry_fps, "15");
 
-    ButtonData button_data = (ButtonData){window, entry};
-    EntryData entry_data = (EntryData){entry};
+    ButtonData button_data = (ButtonData){window, entry_folder};
+    EntryData entry_data = (EntryData){entry_folder, entry_fps};
 
     /* Connect the "clicked" signal of the button to our callback */
     g_signal_connect(button_folder, "clicked", (GCallback)callback_select_folder, (gpointer)(&button_data));
@@ -147,14 +163,24 @@ int main(int argc, char** argv) {
     box_start = xpm_label_box("folder.xpm", "Start");
 
     vbox = (GtkBox*)gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    hbox = (GtkBox*)gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    hbox_folder = (GtkBox*)gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    hbox_fps    = (GtkBox*)gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    hbox_start  = (GtkBox*)gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 
-    gtk_box_pack_start(hbox, (GtkWidget*)button_start, TRUE, TRUE, 10);
+    gtk_box_pack_start(hbox_folder, (GtkWidget*)button_folder, FALSE, FALSE, 10);
+    gtk_box_pack_start(hbox_folder, (GtkWidget*)entry_folder, FALSE, FALSE, 10);
 
-    gtk_box_pack_start(vbox, (GtkWidget*)label_select, FALSE, FALSE, 10);
-    gtk_box_pack_start(vbox, (GtkWidget*)button_folder, FALSE, FALSE, 10);
-    gtk_box_pack_start(vbox, (GtkWidget*)entry, FALSE, FALSE, 10);
-    gtk_box_pack_start(vbox, (GtkWidget*)hbox, FALSE, FALSE, 10);
+    gtk_box_pack_start(hbox_fps, (GtkWidget*)label_fps, FALSE, FALSE, 10);
+    gtk_box_pack_start(hbox_fps, (GtkWidget*)entry_fps, FALSE, FALSE, 10);
+
+    gtk_box_pack_start(hbox_start, (GtkWidget*)label_space, TRUE, TRUE, 10);
+    gtk_box_pack_start(hbox_start, (GtkWidget*)button_start, FALSE, FALSE, 10);
+    gtk_box_pack_start(hbox_start, (GtkWidget*)label_space, TRUE, TRUE, 10);
+
+    gtk_box_pack_start(vbox, (GtkWidget*)label_folder, FALSE, FALSE, 10);
+    gtk_box_pack_start(vbox, (GtkWidget*)hbox_folder, FALSE, FALSE, 10);
+    gtk_box_pack_start(vbox, (GtkWidget*)hbox_fps, FALSE, FALSE, 10);
+    gtk_box_pack_start(vbox, (GtkWidget*)hbox_start, FALSE, FALSE, 10);
 
     gtk_container_add((GtkContainer*)window, (GtkWidget*)vbox);
     gtk_container_add((GtkContainer*)button_folder, (GtkWidget*)box_folder);
@@ -166,11 +192,15 @@ int main(int argc, char** argv) {
     gtk_widget_show((GtkWidget*)box_start);
 
     gtk_widget_show((GtkWidget*)vbox);
-    gtk_widget_show((GtkWidget*)hbox);
+    gtk_widget_show((GtkWidget*)hbox_folder);
+    gtk_widget_show((GtkWidget*)hbox_fps);
+    gtk_widget_show((GtkWidget*)hbox_start);
 
-    gtk_widget_show((GtkWidget*)label_select);
+    gtk_widget_show((GtkWidget*)label_folder);
+    gtk_widget_show((GtkWidget*)label_fps);
     
-    gtk_widget_show((GtkWidget*)entry);
+    gtk_widget_show((GtkWidget*)entry_folder);
+    gtk_widget_show((GtkWidget*)entry_fps);
 
     gtk_widget_show((GtkWidget*)button_folder);
     gtk_widget_show((GtkWidget*)button_start);
