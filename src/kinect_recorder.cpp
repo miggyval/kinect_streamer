@@ -29,6 +29,7 @@ struct KinectRecorderArgs : public argparse::Args {
     std::string &src_path = arg("directory path for recorded data");
     int &fps = kwarg("f,framerate", "framerate (fps)").set_default(15);
     bool &webcam = flag("w,webcam", "use webcam instead of kinect").set_default(false);
+    std::string &serial = kwarg("s,serial", "Serial Number").set_default("");
 };
 
 
@@ -100,7 +101,6 @@ int main(int argc, char** argv) {
         std::cout << "Please choose a framerate between 1 and 30. (inclusive)" << std::endl;
         exit(-1);
     }
-
     root_string = args.src_path;
     time_string = root_string + std::string("/time/");
     color_string = root_string + std::string("/color/");
@@ -163,12 +163,13 @@ int main(int argc, char** argv) {
     libfreenect2::Frame undistorted(DEPTH_W, DEPTH_H, 4);
     libfreenect2::Frame registered(DEPTH_W, DEPTH_H, 4);
     libfreenect2::Registration* registration;
-    std::string serial = freenect2.getDefaultDeviceSerialNumber();
-
+    std::string serial = args.serial;
+    
     VideoCapture cap;
 
     bool use_kinect = true;
-    if (freenect2.enumerateDevices() == 0) {
+    int num_devices = freenect2.enumerateDevices();
+    if (num_devices == 0) {
         std::cout << "No device connected!" << std::endl;
         std::cout << "Would you like to use a webcam? [Y/n]" << std::endl;
         decision([](void) {}, [](void) {exit(-1);});
@@ -176,7 +177,9 @@ int main(int argc, char** argv) {
         use_kinect = false;
     }
     if (use_kinect) {
-
+        if (serial == "") {
+            serial = freenect2.getDefaultDeviceSerialNumber();
+        }
         pipeline = new libfreenect2::OpenGLPacketPipeline();
         dev = freenect2.openDevice(serial, pipeline);
         dev->setColorFrameListener(&listener);

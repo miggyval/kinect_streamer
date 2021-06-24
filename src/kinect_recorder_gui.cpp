@@ -4,6 +4,12 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 
+#include <libfreenect2/libfreenect2.hpp>
+#include <libfreenect2/frame_listener_impl.h>
+#include <libfreenect2/registration.h>
+#include <libfreenect2/packet_pipeline.h>
+#include <libfreenect2/logger.h>
+
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
@@ -13,6 +19,9 @@
 
 using namespace cv;
 
+typedef struct DeviceData {
+    GtkComboBoxText* cbox;
+} DeviceData;
 
 typedef struct ButtonData {
     GtkWindow* window;
@@ -22,6 +31,7 @@ typedef struct ButtonData {
 typedef struct EntryData {
     GtkEntry* entry_folder;
     GtkEntry* entry_fps;
+    GtkComboBoxText* cbox_device;
 } EntryData;
 
 /* Create a new hbox with an image and a label packed into it
@@ -52,15 +62,30 @@ static GtkBox* xpm_label_box(gchar* xpm_filename, gchar* label_text) {
     return box;
 }
 
+const std::string kinect_prefix = std::string("Kinect v2: ");
+
+static void callback_refresh_devices(GtkWidget* widget, gpointer user_data) {
+    DeviceData* device_data = (DeviceData*)user_data;
+    GtkComboBoxText* cbox = device_data->cbox;
+    libfreenect2::Freenect2 freenect2;
+    gtk_combo_box_text_remove_all(cbox);
+    int num_devices = freenect2.enumerateDevices();
+    for (int i = 0; i < num_devices; i++) {
+        std::string serial = kinect_prefix + freenect2.getDeviceSerialNumber(i);
+        gtk_combo_box_text_append(cbox, NULL, serial.c_str());
+    }
+}
 
 static void callback_start(GtkWidget* widget, gpointer user_data) {
     EntryData* entry_data = (EntryData*)user_data;
     GtkEntry* entry_folder = entry_data->entry_folder;
     GtkEntry* entry_fps = entry_data->entry_fps;
+    GtkComboBoxText* cbox_device = entry_data->cbox_device;
     char* text_folder = (char*)gtk_entry_get_text(entry_folder);
     char* text_fps = (char*)gtk_entry_get_text(entry_fps);
-    char* args[] = {"./bin/kinect_recorder", text_folder, "-f", text_fps, NULL};
-    for (int i = 0; i < 4; i++) {
+    char* text_serial = (char*)gtk_combo_box_text_get_active_text(cbox_device);
+    char* args[] = {"./bin/kinect_recorder", text_folder, "-f", text_fps, "-s", text_serial + kinect_prefix.length(), NULL};
+    for (int i = 0; i < 6; i++) {
         std::cout << args[i] << " ";
     }
     std::cout << std::endl;
@@ -94,30 +119,36 @@ static void callback_select_folder(GtkWidget* widget, gpointer user_data) {
 
 int main(int argc, char** argv) {
 
+    bool use_kinect = true;
+
     /* GtkWidget is the storage type for widgets */
     GtkBox* vbox;
     GtkBox* hbox_folder;
+    GtkBox* hbox_device;
     GtkBox* hbox_fps;
     GtkBox* hbox_start;
     GtkWindow* window;
     GtkButton* button_folder;
     GtkButton* button_start;
+    GtkButton* button_refresh;
+    GtkButton* button_device;
     GtkBox* box_folder;
+    GtkBox* box_device;
     GtkBox* box_start;
+    GtkBox* box_refresh;
     GtkEntry* entry_folder;
     GtkEntry* entry_fps;
-    GtkLabel* label_folder;
+    GtkLabel* label_device;
     GtkLabel* label_fps;
-    GtkLabel* label_space;
+    GtkComboBoxText* cbox_device;
 
     gtk_init (&argc, &argv);
 
     /* Create a new window */
     window = (GtkWindow*)gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
-    label_folder    = (GtkLabel*)gtk_label_new("Select a folder to store data:");
+    label_device    = (GtkLabel*)gtk_label_new("Select device:");
     label_fps       = (GtkLabel*)gtk_label_new("FPS:");
-    label_space     = (GtkLabel*)gtk_label_new(" ");
 
     /* Create entries */
     entry_folder    = (GtkEntry*)gtk_entry_new();
@@ -125,7 +156,12 @@ int main(int argc, char** argv) {
 
     /* Create buttons*/
     button_folder   = (GtkButton*)gtk_button_new();
+    button_device   = (GtkButton*)gtk_button_new();
     button_start    = (GtkButton*)gtk_button_new();
+    button_refresh    = (GtkButton*)gtk_button_new();
+
+    /* Create combo boxes */
+    cbox_device = (GtkComboBoxText*)gtk_combo_box_text_new_with_entry();
 
     /* Set the window title */
     gtk_window_set_title(window, "Kinect Recorder GUI");
@@ -140,8 +176,7 @@ int main(int argc, char** argv) {
 
     /* Sets the border width of the window. */
     gtk_container_set_border_width((GtkContainer*)window, 20);
-
-
+    
     char* current_path;
     char* ptr;
     if ((current_path = (char*)malloc((size_t)1024)) != NULL) {
@@ -149,21 +184,27 @@ int main(int argc, char** argv) {
         gtk_entry_set_text(entry_folder, current_path);
         free(current_path);
     }
+    
     gtk_entry_set_text(entry_fps, "15");
-
     ButtonData button_data = (ButtonData){window, entry_folder};
-    EntryData entry_data = (EntryData){entry_folder, entry_fps};
+    EntryData entry_data = (EntryData){entry_folder, entry_fps, cbox_device};
+    DeviceData device_data = (DeviceData){cbox_device};
 
     /* Connect the "clicked" signal of the button to our callback */
     g_signal_connect(button_folder, "clicked", (GCallback)callback_select_folder, (gpointer)(&button_data));
     g_signal_connect(button_start, "clicked", (GCallback)callback_start, (gpointer)(&entry_data));
+    g_signal_connect(button_refresh, "clicked", (GCallback)callback_refresh_devices, (gpointer)(&device_data));
 
     /* This calls our box creating function */
     box_folder = xpm_label_box("folder.xpm", "Select Folder");
+    box_device = xpm_label_box("folder.xpm", "Select Device");
     box_start = xpm_label_box("folder.xpm", "Start");
+    box_refresh = xpm_label_box("folder.xpm", "Refresh");
 
     vbox = (GtkBox*)gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+
     hbox_folder = (GtkBox*)gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    hbox_device = (GtkBox*)gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     hbox_fps    = (GtkBox*)gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     hbox_start  = (GtkBox*)gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 
@@ -173,30 +214,36 @@ int main(int argc, char** argv) {
     gtk_box_pack_start(hbox_fps, (GtkWidget*)label_fps, FALSE, FALSE, 10);
     gtk_box_pack_start(hbox_fps, (GtkWidget*)entry_fps, FALSE, FALSE, 10);
 
-    gtk_box_pack_start(hbox_start, (GtkWidget*)label_space, TRUE, TRUE, 10);
-    gtk_box_pack_start(hbox_start, (GtkWidget*)button_start, FALSE, FALSE, 10);
-    gtk_box_pack_start(hbox_start, (GtkWidget*)label_space, TRUE, TRUE, 10);
+    gtk_box_pack_start(hbox_device, (GtkWidget*)label_device, FALSE, FALSE, 10);
+    gtk_box_pack_start(hbox_device, (GtkWidget*)cbox_device, FALSE, FALSE, 10);
 
-    gtk_box_pack_start(vbox, (GtkWidget*)label_folder, FALSE, FALSE, 10);
+    gtk_box_pack_start(hbox_start, (GtkWidget*)button_start, FALSE, FALSE, 10);
+    gtk_box_pack_start(hbox_start, (GtkWidget*)button_refresh, FALSE, FALSE, 10);
+
     gtk_box_pack_start(vbox, (GtkWidget*)hbox_folder, FALSE, FALSE, 10);
+    gtk_box_pack_start(vbox, (GtkWidget*)hbox_device, FALSE, FALSE, 10);
     gtk_box_pack_start(vbox, (GtkWidget*)hbox_fps, FALSE, FALSE, 10);
     gtk_box_pack_start(vbox, (GtkWidget*)hbox_start, FALSE, FALSE, 10);
 
     gtk_container_add((GtkContainer*)window, (GtkWidget*)vbox);
     gtk_container_add((GtkContainer*)button_folder, (GtkWidget*)box_folder);
     gtk_container_add((GtkContainer*)button_start, (GtkWidget*)box_start);
+    gtk_container_add((GtkContainer*)button_refresh, (GtkWidget*)box_refresh);
 
     /* Pack and show all our widgets */
 
     gtk_widget_show((GtkWidget*)box_folder);
     gtk_widget_show((GtkWidget*)box_start);
+    gtk_widget_show((GtkWidget*)box_refresh);
 
     gtk_widget_show((GtkWidget*)vbox);
+
     gtk_widget_show((GtkWidget*)hbox_folder);
+    gtk_widget_show((GtkWidget*)hbox_device);
     gtk_widget_show((GtkWidget*)hbox_fps);
     gtk_widget_show((GtkWidget*)hbox_start);
 
-    gtk_widget_show((GtkWidget*)label_folder);
+    gtk_widget_show((GtkWidget*)label_device);
     gtk_widget_show((GtkWidget*)label_fps);
     
     gtk_widget_show((GtkWidget*)entry_folder);
@@ -204,9 +251,12 @@ int main(int argc, char** argv) {
 
     gtk_widget_show((GtkWidget*)button_folder);
     gtk_widget_show((GtkWidget*)button_start);
+    gtk_widget_show((GtkWidget*)button_refresh);
+
+
+    gtk_widget_show((GtkWidget*)cbox_device);
 
     gtk_widget_show((GtkWidget*)window);
-
     /* Rest in gtk_main and wait for the fun to begin! */
     gtk_main();
     return 0;
