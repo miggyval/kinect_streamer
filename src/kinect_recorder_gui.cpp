@@ -118,7 +118,7 @@ static void callback_select_folder(GtkWidget* widget, gpointer user_data) {
 }
 
 int main(int argc, char** argv) {
-
+    libfreenect2::setGlobalLogger(NULL);
     bool use_kinect = true;
 
     /* GtkWidget is the storage type for widgets */
@@ -138,16 +138,16 @@ int main(int argc, char** argv) {
     GtkBox* box_refresh;
     GtkEntry* entry_folder;
     GtkEntry* entry_fps;
-    GtkLabel* label_device;
     GtkLabel* label_fps;
     GtkComboBoxText* cbox_device;
+    GtkListStore *store;
+    GtkTreeView* tree_view;
 
     gtk_init (&argc, &argv);
 
     /* Create a new window */
     window = (GtkWindow*)gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
-    label_device    = (GtkLabel*)gtk_label_new("Select device:");
     label_fps       = (GtkLabel*)gtk_label_new("FPS:");
 
     /* Create entries */
@@ -162,6 +162,17 @@ int main(int argc, char** argv) {
 
     /* Create combo boxes */
     cbox_device = (GtkComboBoxText*)gtk_combo_box_text_new_with_entry();
+
+    store = gtk_list_store_new(1, G_TYPE_STRING);
+
+    tree_view = (GtkTreeView*)gtk_tree_view_new();
+
+    GtkTreeIter iter;
+    for (gint i = 0; i < 10; i++) {
+        gchar* data = (gchar*)"Hello";
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set (store, &iter, 0, data, -1);
+    }
 
     /* Set the window title */
     gtk_window_set_title(window, "Kinect Recorder GUI");
@@ -197,7 +208,7 @@ int main(int argc, char** argv) {
 
     /* This calls our box creating function */
     box_folder = xpm_label_box("folder.xpm", "Select Folder");
-    box_device = xpm_label_box("folder.xpm", "Select Device");
+    box_device = xpm_label_box("folder.xpm", "Add Device");
     box_start = xpm_label_box("folder.xpm", "Start");
     box_refresh = xpm_label_box("folder.xpm", "Refresh");
 
@@ -214,7 +225,7 @@ int main(int argc, char** argv) {
     gtk_box_pack_start(hbox_fps, (GtkWidget*)label_fps, FALSE, FALSE, 10);
     gtk_box_pack_start(hbox_fps, (GtkWidget*)entry_fps, FALSE, FALSE, 10);
 
-    gtk_box_pack_start(hbox_device, (GtkWidget*)label_device, FALSE, FALSE, 10);
+    gtk_box_pack_start(hbox_device, (GtkWidget*)button_device, FALSE, FALSE, 10);
     gtk_box_pack_start(hbox_device, (GtkWidget*)cbox_device, FALSE, FALSE, 10);
 
     gtk_box_pack_start(hbox_start, (GtkWidget*)button_start, FALSE, FALSE, 10);
@@ -224,15 +235,20 @@ int main(int argc, char** argv) {
     gtk_box_pack_start(vbox, (GtkWidget*)hbox_device, FALSE, FALSE, 10);
     gtk_box_pack_start(vbox, (GtkWidget*)hbox_fps, FALSE, FALSE, 10);
     gtk_box_pack_start(vbox, (GtkWidget*)hbox_start, FALSE, FALSE, 10);
+    gtk_box_pack_start(vbox, (GtkWidget*)tree_view, FALSE, FALSE, 10);
 
     gtk_container_add((GtkContainer*)window, (GtkWidget*)vbox);
     gtk_container_add((GtkContainer*)button_folder, (GtkWidget*)box_folder);
     gtk_container_add((GtkContainer*)button_start, (GtkWidget*)box_start);
     gtk_container_add((GtkContainer*)button_refresh, (GtkWidget*)box_refresh);
+    gtk_container_add((GtkContainer*)button_device, (GtkWidget*)box_device);
+
+    gtk_tree_view_set_model(tree_view, (GtkTreeModel*)store);
 
     /* Pack and show all our widgets */
 
     gtk_widget_show((GtkWidget*)box_folder);
+    gtk_widget_show((GtkWidget*)box_device);
     gtk_widget_show((GtkWidget*)box_start);
     gtk_widget_show((GtkWidget*)box_refresh);
 
@@ -243,20 +259,22 @@ int main(int argc, char** argv) {
     gtk_widget_show((GtkWidget*)hbox_fps);
     gtk_widget_show((GtkWidget*)hbox_start);
 
-    gtk_widget_show((GtkWidget*)label_device);
     gtk_widget_show((GtkWidget*)label_fps);
     
     gtk_widget_show((GtkWidget*)entry_folder);
     gtk_widget_show((GtkWidget*)entry_fps);
 
+    gtk_widget_show((GtkWidget*)button_device);
     gtk_widget_show((GtkWidget*)button_folder);
     gtk_widget_show((GtkWidget*)button_start);
     gtk_widget_show((GtkWidget*)button_refresh);
 
-
     gtk_widget_show((GtkWidget*)cbox_device);
 
+    gtk_widget_show((GtkWidget*)tree_view);
+
     gtk_widget_show((GtkWidget*)window);
+
     /* Rest in gtk_main and wait for the fun to begin! */
     gtk_main();
     return 0;
