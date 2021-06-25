@@ -14,6 +14,8 @@ Driver for recording and viewing Kinect v2 streams.
 **Features**
 - **kinect_recorder** -> Recording to disk from Kinect v2
 - **kinect_viewer** -> Viewing binary files written by program
+- **kinect_recorder_gui** -> GUI version of recorder
+- **kinect_viewer_gui** -> GUI version of viewer
 - See chapter [Running Kinect](README.md#running-kinect) below for usage
 
 ## Acknowledgements
@@ -24,7 +26,7 @@ Driver for recording and viewing Kinect v2 streams.
 ## Prerequisites
 ### Dependencies
 ```console
-sudo apt-get git build-essential
+sudo apt install git build-essential
 ```
 ### Installing OpenCV
 ```console
@@ -105,16 +107,27 @@ make -j`nproc`
 - WARNING: Recommended disk space - 10 MB per frame (approx 28 FPS)
 - Example Space: 1 hour -> 1 TB
 - Compress after session
+#### Command Line
 ```console
 # Usage
 ./kinect_recorder <folder>
 # Example
 ./kinect_recorder ${HOME}/Desktop/kinect_002/patient_x
 ```
+#### GUI
+```console
+# Usage
+./kinect_recorder_gui
 ### Viewing from Disk
+#### Command Line
 ```console
 # Usage
 ./kinect_viewer <folder>
 # Example
 ./kinect_viewer ${HOME}/Desktop/kinect_002/patient_x
+```
+#### GUI
+```console
+# Usage
+./kinect_viewer_gui
 ```
