@@ -118,6 +118,7 @@ make -j`nproc`
 ```console
 # Usage
 ./kinect_recorder_gui
+```
 ### Viewing from Disk
 #### Command Line
 ```console
