@@ -42,9 +42,9 @@ target_link_libraries( kinect_viewer_gui ${freenect2_LIBRARIES} ${OpenCV_LIBS} $
 target_link_libraries( kinect_test ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${GTK3_LIBRARIES} ${kinect_streamer_LIBS} stdc++fs )
 
 set_target_properties( kinect_recorder PROPERTIES CXX_STANDARD 17 )
-set_target_properties( kinect_viewer PROPERTIES CXX_STANDARD 17 )
-set_target_properties( kinect_test PROPERTIES CXX_STANDARD 17 )
 set_target_properties( kinect_recorder_gui PROPERTIES CXX_STANDARD 17 )
+set_target_properties( kinect_viewer PROPERTIES CXX_STANDARD 17 )
 set_target_properties( kinect_viewer_gui PROPERTIES CXX_STANDARD 17 )
+set_target_properties( kinect_test PROPERTIES CXX_STANDARD 17 )
 
-add_compile_options(${GTK3_CFLAGS_OTHER})
+add_compile_options(${GTK3_CFLAGS_OTHER}) 
