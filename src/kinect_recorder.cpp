@@ -155,6 +155,7 @@ int main(int argc, char** argv) {
     decision(lambda, [](void) {exit(-1);});
 
 
+    libfreenect2::setGlobalLogger(NULL);
     libfreenect2::Freenect2 freenect2;
     libfreenect2::Freenect2Device *dev = 0;
     libfreenect2::PacketPipeline *pipeline = 0;

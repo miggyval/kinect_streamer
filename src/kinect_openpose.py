@@ -4,6 +4,7 @@ import sys
 import cv2
 import os
 import numpy as np
+import math
 from sys import platform
 import argparse
 
@@ -29,12 +30,12 @@ try:
 
     # Flags
     parser = argparse.ArgumentParser()
-    parser.add_argument("--image_path", default="/home/s4626478/cheese.png", help="Process an image. Read all standard formats (jpg, png, bmp, etc.).")
     args = parser.parse_known_args()
 
     # Custom Params (refer to include/openpose/flags.hpp for more parameters)
     params = dict()
-    params["model_folder"] = "/home/s4626478/openpose/models/"
+    params["model_folder"] = "/home/medrobotics/openpose/models/"
+    params["net_resolution"] = "-1x352"
     #params["face"] = True
     #params["face_detector"] = 2
 
@@ -58,29 +59,44 @@ try:
     opWrapper = op.WrapperPython()
     opWrapper.configure(params)
     opWrapper.start()
-
     # Process Image
-    for i in range(10, 436):
+    for i in range(10000):
         datum = op.Datum()
-        string = '/home/s4626478/kinect_streamer/blah/color/' + str(i) + '.bin'
+        string = '/home/medrobotics/kinect_streamer/test/color/' + str(i) + '.bin'
         imageToProcess = np.fromfile(string, dtype=np.uint8)
         imageToProcess = np.reshape(imageToProcess, (1080, 1920, 4))
-        faceRectangles = [
-            op.Rectangle(330.119385, 277.532715, 48.717274, 48.717274),
-            op.Rectangle(24.036991, 267.918793, 65.175171, 65.175171),
-            op.Rectangle(151.803436, 32.477852, 108.295761, 108.295761),
-        ]
-
-        datum.faceRectangles = faceRectangles
-        
         imageToProcess = imageToProcess[:, :, :3].copy()
         datum.cvInputData = imageToProcess
         opWrapper.emplaceAndPop(op.VectorDatum([datum]))
-        #print("Face keypoints: \n" + str(datum.faceKeypoints))
-        #Display Image
-        #print("Body keypoints: \n" + str(datum.poseKeypoints))
-        cv2.imshow("OpenPose 1.7.0 - Tutorial Python API", datum.cvOutputData)
-        cv2.waitKey(1)
+        out = datum.cvOutputData
+        if datum.poseKeypoints is not None:
+            for j in range(datum.poseKeypoints.shape[0]):
+                mean = np.zeros(shape=(2,))
+                variance = np.zeros(shape=(2,))
+                count = 0
+                for k in [0, 14, 15, 16, 17]:
+                    if datum.poseKeypoints[j][k][2] != 0.0:
+                        count += 1
+                if count == 0:
+                    break
+                for k in [0, 14, 15, 16, 17]:
+                    if datum.poseKeypoints[j][k][2] != 0.0:
+                        mean += datum.poseKeypoints[j][k][:2] / count
+                for k in [0, 14, 15, 16, 17]:
+                    if datum.poseKeypoints[j][k][2] != 0.0:
+                        variance += (datum.poseKeypoints[j][k][:2] - mean) * (datum.poseKeypoints[j][k][:2] - mean) / count
+                std_dev = np.sqrt(variance)
+                x1 = min(max(int(mean[0] - 3 * std_dev[0]), 0), 1920)
+                x2 = min(max(int(mean[0] + 3 * std_dev[0]), 0), 1920)
+                y1 = min(max(int(mean[1] - 4 * std_dev[1]), 0), 1080)
+                y2 = min(max(int(mean[1] + 4 * std_dev[1]), 0), 1080)
+                face = out[y1:y2, x1:x2]
+                if face is not None and face.size != 0:
+                    face = cv2.GaussianBlur(face, (51, 51), 50)
+                out[y1:y2, x1:x2] = face
+        cv2.imshow("OpenPose 1.7.0 - Tutorial Python API", out)
+        if cv2.waitKey(1) == ord('q'):
+            sys.exit(1)
 except Exception as e:
     print(e)
     sys.exit(-1)
