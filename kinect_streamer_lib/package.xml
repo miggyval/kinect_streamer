@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name> kinect_streamer_lib </name>
+  <version> 0.0.0 </version>
+  <description> The Kinect Streamer Library </description>
+  <maintainer email="miguel.valencia@uq.edu.au">Miguel Marco Valencia</maintainer>
+  <license>Apache 2.0</license>
+
+  <url type="repository">https://github.com/uqmvale6/kinect_streamer.git</url>
+  <url type="bugtracker">https://github.com/uqmvale6/kinect_streamer.git/issues</url>
+  <author>Miguel Marco Valencia</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>eigen</build_depend>
+  <build_export_depend>message_runtime</build_export_depend>
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
+  <exec_depend>message_runtime</exec_depend>
+  <exec_depend>rospy</exec_depend>
+</package>
