@@ -17,6 +17,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)
 
 find_package( freenect2 REQUIRED )
 find_package( OpenCV REQUIRED )
+find_package( camera_info_manager REQUIRED )
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)

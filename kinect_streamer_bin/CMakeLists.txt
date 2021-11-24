@@ -10,6 +10,7 @@ find_package( OpenCV REQUIRED )
 find_package( sensor_msgs REQUIRED )
 find_package( cv_bridge REQUIRED )
 find_package( PkgConfig REQUIRED )
+find_package( camera_info_manager REQUIRED )
 
 find_package(catkin REQUIRED COMPONENTS
   kinect_streamer_lib
@@ -19,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   roscpp
   rospy
+  camera_info_manager
 )
 
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
@@ -46,7 +48,7 @@ add_executable( kinect_viewer_cli	src/nodes/kinect_viewer_cli.cpp )
 add_executable( kinect_recorder_gui	src/nodes/kinect_recorder_gui.cpp )
 add_executable( kinect_viewer_gui	src/nodes/kinect_viewer_gui.cpp )
 
-target_link_libraries( kinect_camera	${freenect2_LIBRARIES} ${OpenCV_LIBS} ${catkin_LIBRARIES} kinect_streamer_lib stdc++fs )
+target_link_libraries( kinect_camera ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${catkin_LIBRARIES} kinect_streamer_lib stdc++fs )
 
 target_link_libraries( kinect_recorder_cli	${freenect2_LIBRARIES} ${OpenCV_LIBS} ${kinect_streamer_LIBS} stdc++fs )
 target_link_libraries( kinect_viewer_cli	${freenect2_LIBRARIES} ${OpenCV_LIBS} ${kinect_streamer_LIBS} stdc++fs)
