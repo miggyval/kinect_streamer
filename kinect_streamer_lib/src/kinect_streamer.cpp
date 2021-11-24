@@ -10,37 +10,41 @@
 
 namespace KinectStreamer {
 
-KinectDevice::KinectDevice() {
+KinectDevice::KinectDevice(std::string serial) {
 
     pipeline = new libfreenect2::OpenGLPacketPipeline();
     freenect2 = new libfreenect2::Freenect2;
     listener = new libfreenect2::SyncMultiFrameListener(libfreenect2::Frame::Color | libfreenect2::Frame::Depth);
     if (freenect2->enumerateDevices() == 0) {
-        throw "No devices!";
+        std::cout << "No devices found!" << std::endl;
+        throw std::exception();
     }
-    serial = freenect2->getDefaultDeviceSerialNumber();
+    if (serial == "") {
+        serial = freenect2->getDefaultDeviceSerialNumber();
+    }
     dev = freenect2->openDevice(serial, pipeline);
     dev->setColorFrameListener(listener);
     dev->setIrAndDepthFrameListener(listener);
 }
 
-void KinectDevice::start() {
-    dev->start();
+int KinectDevice::start() {
+    return dev->start();
 }
 
-void KinectDevice::stop() {
-    dev->stop();
+int KinectDevice::stop() {
+    return dev->stop();
 }
 
 libfreenect2::Frame* KinectDevice::get_frame(libfreenect2::Frame::Type type) {
-    if (!listener->waitForNewFrame(frames, 1000)) {
+    if (!listener->waitForNewFrame(frames, 200)) {
         std::cout << "Error!" << std::endl;
+        throw std::exception();
     }
     return frames[type];
 }
 
 void KinectDevice::release_frames() {
-    listener->release(frames);
+    return listener->release(frames);
 }
 
 KinectDevice::~KinectDevice() {

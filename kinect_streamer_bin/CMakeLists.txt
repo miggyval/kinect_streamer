@@ -7,11 +7,16 @@ set( OpenCV_DIR ${CMAKE_SOURCE_DIR}/opencv/build )
 
 find_package( freenect2 REQUIRED )
 find_package( OpenCV REQUIRED )
+find_package( sensor_msgs REQUIRED )
+find_package( cv_bridge REQUIRED )
 find_package( PkgConfig REQUIRED )
 
 find_package(catkin REQUIRED COMPONENTS
   kinect_streamer_lib
   std_msgs
+  sensor_msgs
+  image_transport
+  cv_bridge
   roscpp
   rospy
 )
@@ -22,8 +27,8 @@ catkin_package(
   CATKIN_DEPENDS roscpp rospy std_msgs
 )
 
-
 include_directories(
+    ${catkin_INCLUDE_DIRS}
     ${freenect2_INCLUDE_DIR}
     ${OpenCV_INCLUDE_DIRS}
     ${GTK3_INCLUDE_DIRS}
@@ -35,10 +40,13 @@ link_directories(
     ${kinect_streamer_LIB_DIR}
 )
 
+add_executable( kinect_camera	src/nodes/kinect_camera.cpp )
 add_executable( kinect_recorder_cli	src/nodes/kinect_recorder_cli.cpp )
 add_executable( kinect_viewer_cli	src/nodes/kinect_viewer_cli.cpp )
 add_executable( kinect_recorder_gui	src/nodes/kinect_recorder_gui.cpp )
 add_executable( kinect_viewer_gui	src/nodes/kinect_viewer_gui.cpp )
+
+target_link_libraries( kinect_camera	${freenect2_LIBRARIES} ${OpenCV_LIBS} ${catkin_LIBRARIES} kinect_streamer_lib stdc++fs )
 
 target_link_libraries( kinect_recorder_cli	${freenect2_LIBRARIES} ${OpenCV_LIBS} ${kinect_streamer_LIBS} stdc++fs )
 target_link_libraries( kinect_viewer_cli	${freenect2_LIBRARIES} ${OpenCV_LIBS} ${kinect_streamer_LIBS} stdc++fs)
