@@ -18,8 +18,11 @@
 
 #include <camera_info_manager/camera_info_manager.h>
 
+// roslaunch aruco_detect aruco_detect.launch camera:=/color_a image:=/image_raw dictionary:=1 fiducial_len:=0.120 publish_images:=true
+// roslaunch aruco_detect aruco_detect.launch camera:=/color_b image:=/image_raw dictionary:=1 fiducial_len:=0.120 publish_images:=true
+
 int main(int argc, char** argv) {
-    libfreenect2::setGlobalLogger(NULL);
+    //libfreenect2::setGlobalLogger(NULL);
     std::string serial_a = "501530742442";
     std::string serial_b = "226287140347";
     ros::init(argc, argv, "kinect_camera");
@@ -37,13 +40,32 @@ int main(int argc, char** argv) {
             exit(-1);
         }
         //
-            ros::NodeHandle nh_camera_color;
-            ros::NodeHandle nh_camera_color_a(nh_camera_color, "color_a");
-            ros::NodeHandle nh_camera_color_b(nh_camera_color, "color_b");
-            camera_info_manager::CameraInfoManager manager_color_a(nh_camera_color_a, "color_a");
-            camera_info_manager::CameraInfoManager manager_color_b(nh_camera_color_b, "color_b");
-            manager_color_a.loadCameraInfo("");
-            manager_color_b.loadCameraInfo("");
+        ros::NodeHandle nh_camera_info_color_a;
+        ros::NodeHandle nh_camera_info_color_b;
+        
+        ros::NodeHandle nh_camera_color;
+        ros::NodeHandle nh_camera_color_a(nh_camera_color, "color_a");
+        ros::NodeHandle nh_camera_color_b(nh_camera_color, "color_b");
+        camera_info_manager::CameraInfoManager manager_color_a(nh_camera_color_a, "color_a");
+        camera_info_manager::CameraInfoManager manager_color_b(nh_camera_color_b, "color_b");
+        
+        ros::Publisher pub_camera_info_color_a = nh_camera_info_color_a.advertise<sensor_msgs::CameraInfo>("color_a/camera_info", 1);
+        ros::Publisher pub_camera_info_color_b = nh_camera_info_color_b.advertise<sensor_msgs::CameraInfo>("color_b/camera_info", 1);
+        std::cout << "TEST!" << std::endl;
+        if (!manager_color_a.loadCameraInfo("")) {
+            std::cout << "Failed to get calibration from Color A .yaml" << std::endl;
+            exit(-1);
+        }
+        if (!manager_color_a.isCalibrated()) {
+            std::cout << "Color A is not calibrated." << std::endl;
+        }
+        if (!manager_color_b.loadCameraInfo("")) {
+            std::cout << "Failed to get calibration from Color B .yaml" << std::endl;
+            exit(-1);
+        }
+        if (!manager_color_b.isCalibrated()) {
+            std::cout << "Color B is not calibrated." << std::endl;
+        }
         //
         ros::NodeHandle nh_color_a;
         ros::NodeHandle nh_color_b;
@@ -60,12 +82,19 @@ int main(int argc, char** argv) {
             libfreenect2::Frame* color_b = kin_dev_b.get_frame(libfreenect2::Frame::Color);
             cv::Mat img_color_a(cv::Size(color_a->width, color_a->height), CV_8UC4, color_a->data);
             cv::Mat img_color_b(cv::Size(color_b->width, color_b->height), CV_8UC4, color_b->data);
-            cv::flip(img_color_a, img_color_a, 0);
-            cv::flip(img_color_b, img_color_b, 0);
+            cv::flip(img_color_a, img_color_a, 1);
+            cv::flip(img_color_b, img_color_b, 1);
             sensor_msgs::ImagePtr msg_color_a = cv_bridge::CvImage(std_msgs::Header(), "bgra8", img_color_a).toImageMsg();
             sensor_msgs::ImagePtr msg_color_b = cv_bridge::CvImage(std_msgs::Header(), "bgra8", img_color_b).toImageMsg();
             pub_color_a.publish(msg_color_a);
             pub_color_b.publish(msg_color_b);
+            sensor_msgs::CameraInfo info_camera_a = manager_color_a.getCameraInfo();
+            sensor_msgs::CameraInfo info_camera_b = manager_color_b.getCameraInfo();
+            info_camera_a.header.stamp = ros::Time::now();
+            info_camera_b.header.stamp = ros::Time::now();
+            pub_camera_info_color_a.publish(info_camera_a);
+            pub_camera_info_color_b.publish(info_camera_b);
+
             if (show) {
                 cv::imshow("Color A", img_color_a);
                 cv::imshow("Color B", img_color_b);
