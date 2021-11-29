@@ -84,7 +84,7 @@ static void callback_start(GtkWidget* widget, gpointer user_data) {
     char* text_folder = (char*)gtk_entry_get_text(entry_folder);
     char* text_fps = (char*)gtk_entry_get_text(entry_fps);
     char* text_serial = (char*)gtk_combo_box_text_get_active_text(cbox_device);
-    char* args[] = {"./bin/kinect_recorder", text_folder, "-f", text_fps, "-s", text_serial + kinect_prefix.length(), NULL};
+    char* args[] = {"rosrun kinect_streamer_bin kinect_recorder_cli", text_folder, "-f", text_fps, "-s", text_serial + kinect_prefix.length(), NULL};
     for (int i = 0; i < 6; i++) {
         std::cout << args[i] << " ";
     }

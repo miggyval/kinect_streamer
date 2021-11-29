@@ -57,7 +57,7 @@ static void callback_start(GtkWidget* widget, gpointer user_data) {
     GtkEntry* entry = entry_data->entry;
     char* text = (char*)gtk_entry_get_text(entry);
     std::cout << text << std::endl;
-    char* args[] = {"./bin/kinect_viewer", text, NULL};
+    char* args[] = {"rosrun kinect_streamer_bin kinect_viewer_cli", text, NULL};
     execvp(args[0], args);
 }
 

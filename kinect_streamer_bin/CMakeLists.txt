@@ -21,6 +21,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   camera_info_manager
+  pcl_conversions
+  pcl_ros
 )
 
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
@@ -43,12 +45,14 @@ link_directories(
 )
 
 add_executable( kinect_camera	src/nodes/kinect_camera.cpp )
+add_executable( kinect_camera_dual	src/nodes/kinect_camera_dual.cpp )
 add_executable( kinect_recorder_cli	src/nodes/kinect_recorder_cli.cpp )
 add_executable( kinect_viewer_cli	src/nodes/kinect_viewer_cli.cpp )
 add_executable( kinect_recorder_gui	src/nodes/kinect_recorder_gui.cpp )
 add_executable( kinect_viewer_gui	src/nodes/kinect_viewer_gui.cpp )
 
 target_link_libraries( kinect_camera ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${catkin_LIBRARIES} kinect_streamer_lib stdc++fs )
+target_link_libraries( kinect_camera_dual ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${catkin_LIBRARIES} kinect_streamer_lib stdc++fs )
 
 target_link_libraries( kinect_recorder_cli	${freenect2_LIBRARIES} ${OpenCV_LIBS} ${kinect_streamer_LIBS} stdc++fs )
 target_link_libraries( kinect_viewer_cli	${freenect2_LIBRARIES} ${OpenCV_LIBS} ${kinect_streamer_LIBS} stdc++fs)
@@ -56,9 +60,16 @@ target_link_libraries( kinect_viewer_cli	${freenect2_LIBRARIES} ${OpenCV_LIBS} $
 target_link_libraries( kinect_recorder_gui	${freenect2_LIBRARIES} ${OpenCV_LIBS} ${GTK3_LIBRARIES}  ${kinect_streamer_LIBS} stdc++fs )
 target_link_libraries( kinect_viewer_gui	${freenect2_LIBRARIES} ${OpenCV_LIBS} ${GTK3_LIBRARIES}  ${kinect_streamer_LIBS} stdc++fs )
 
+set_target_properties( kinect_camera	PROPERTIES CXX_STANDARD 17 )
+set_target_properties( kinect_camera_dual	PROPERTIES CXX_STANDARD 17 )
 set_target_properties( kinect_recorder_cli	PROPERTIES CXX_STANDARD 17 )
 set_target_properties( kinect_recorder_gui	PROPERTIES CXX_STANDARD 17 )
 set_target_properties( kinect_viewer_cli	PROPERTIES CXX_STANDARD 17 )
 set_target_properties( kinect_viewer_gui	PROPERTIES CXX_STANDARD 17 )
 	
 add_compile_options(${GTK3_CFLAGS_OTHER}) 
+
+catkin_install_python(PROGRAMS
+  src/nodes/kinect_tf.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)

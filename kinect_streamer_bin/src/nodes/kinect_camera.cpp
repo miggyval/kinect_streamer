@@ -18,88 +18,124 @@
 
 #include <camera_info_manager/camera_info_manager.h>
 
-// roslaunch aruco_detect aruco_detect.launch camera:=/color_a image:=/image_raw dictionary:=1 fiducial_len:=0.120 publish_images:=true
+
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/filters/voxel_grid.h>
+
+// Include PointCloud2 message
+#include <sensor_msgs/PointCloud2.h>
+#include <tf/tf.h>
+
+// roslaunch aruco_detect aruco_detect.launch camera:=/color image:=/image_raw dictionary:=1 fiducial_len:=0.120 publish_images:=true
 // roslaunch aruco_detect aruco_detect.launch camera:=/color_b image:=/image_raw dictionary:=1 fiducial_len:=0.120 publish_images:=true
 
 int main(int argc, char** argv) {
     //libfreenect2::setGlobalLogger(NULL);
-    std::string serial_a = "501530742442";
-    std::string serial_b = "226287140347";
+    std::string serial = "175175234247";
     ros::init(argc, argv, "kinect_camera");
     bool show = false;
     bool info = true;
     try {
-        KinectStreamer::KinectDevice kin_dev_a(serial_a);
-        KinectStreamer::KinectDevice kin_dev_b(serial_b);
-        if (!kin_dev_a.start()) {
-            std::cout << "Failed to start Kinect A." << std::endl;
+        KinectStreamer::KinectDevice kin_dev(serial);
+        if (!kin_dev.start()) {
+            std::cout << "Failed to start Kinect." << std::endl;
             exit(-1);
         }
-        if (!kin_dev_b.start()) {
-            std::cout << "Failed to start Kinect B." << std::endl;
-            exit(-1);
-        }
-        //
-        ros::NodeHandle nh_camera_info_color_a;
-        ros::NodeHandle nh_camera_info_color_b;
+        ros::NodeHandle nh_camera_info_color;
+        ros::NodeHandle nh_cloud;
         
-        ros::NodeHandle nh_camera_color;
-        ros::NodeHandle nh_camera_color_a(nh_camera_color, "color_a");
-        ros::NodeHandle nh_camera_color_b(nh_camera_color, "color_b");
-        camera_info_manager::CameraInfoManager manager_color_a(nh_camera_color_a, "color_a");
-        camera_info_manager::CameraInfoManager manager_color_b(nh_camera_color_b, "color_b");
+        ros::NodeHandle nh_camera_color(nh_camera_color, "color");
+        camera_info_manager::CameraInfoManager manager_color(nh_camera_color, "color");
         
-        ros::Publisher pub_camera_info_color_a = nh_camera_info_color_a.advertise<sensor_msgs::CameraInfo>("color_a/camera_info", 1);
-        ros::Publisher pub_camera_info_color_b = nh_camera_info_color_b.advertise<sensor_msgs::CameraInfo>("color_b/camera_info", 1);
-        std::cout << "TEST!" << std::endl;
-        if (!manager_color_a.loadCameraInfo("")) {
-            std::cout << "Failed to get calibration from Color A .yaml" << std::endl;
-            exit(-1);
+        ros::Publisher pub_camera_info_color = nh_camera_info_color.advertise<sensor_msgs::CameraInfo>("color/camera_info", 1);
+        if (!manager_color.loadCameraInfo("")) {
+            std::cout << "Failed to get calibration from Color .yaml" << std::endl;
         }
-        if (!manager_color_a.isCalibrated()) {
-            std::cout << "Color A is not calibrated." << std::endl;
+        if (!manager_color.isCalibrated()) {
+            std::cout << "Color is not calibrated." << std::endl;
         }
-        if (!manager_color_b.loadCameraInfo("")) {
-            std::cout << "Failed to get calibration from Color B .yaml" << std::endl;
-            exit(-1);
-        }
-        if (!manager_color_b.isCalibrated()) {
-            std::cout << "Color B is not calibrated." << std::endl;
-        }
-        //
-        ros::NodeHandle nh_color_a;
-        ros::NodeHandle nh_color_b;
-        image_transport::ImageTransport it_color_a(nh_color_a);
-        image_transport::ImageTransport it_color_b(nh_color_b);
-        image_transport::Publisher pub_color_a = it_color_a.advertise("color_a/image_raw", 1);
-        image_transport::Publisher pub_color_b = it_color_b.advertise("color_b/image_raw", 1);
+        ros::NodeHandle nh_color;
+        image_transport::ImageTransport it_color(nh_color);
+        image_transport::Publisher pub_color = it_color.advertise("color/image_raw", 1);
+
+
+
+        ros::Publisher pub_cloud = nh_cloud.advertise<sensor_msgs::PointCloud2>("color/points", 1);
+
+
         if (show) {
-            cv::namedWindow("Color A", cv::WINDOW_NORMAL);
-            cv::namedWindow("Color B", cv::WINDOW_NORMAL);
+            cv::namedWindow("Color", cv::WINDOW_NORMAL);
         }
         while (ros::ok()) {
-            libfreenect2::Frame* color_a = kin_dev_a.get_frame(libfreenect2::Frame::Color);
-            libfreenect2::Frame* color_b = kin_dev_b.get_frame(libfreenect2::Frame::Color);
-            cv::Mat img_color_a(cv::Size(color_a->width, color_a->height), CV_8UC4, color_a->data);
-            cv::Mat img_color_b(cv::Size(color_b->width, color_b->height), CV_8UC4, color_b->data);
-            cv::flip(img_color_a, img_color_a, 1);
-            cv::flip(img_color_b, img_color_b, 1);
-            sensor_msgs::ImagePtr msg_color_a = cv_bridge::CvImage(std_msgs::Header(), "bgra8", img_color_a).toImageMsg();
-            sensor_msgs::ImagePtr msg_color_b = cv_bridge::CvImage(std_msgs::Header(), "bgra8", img_color_b).toImageMsg();
-            pub_color_a.publish(msg_color_a);
-            pub_color_b.publish(msg_color_b);
-            sensor_msgs::CameraInfo info_camera_a = manager_color_a.getCameraInfo();
-            sensor_msgs::CameraInfo info_camera_b = manager_color_b.getCameraInfo();
-            info_camera_a.header.stamp = ros::Time::now();
-            info_camera_b.header.stamp = ros::Time::now();
-            pub_camera_info_color_a.publish(info_camera_a);
-            pub_camera_info_color_b.publish(info_camera_b);
+            kin_dev.wait_frames();
+            libfreenect2::Frame* color = kin_dev.get_frame(libfreenect2::Frame::Color);
+            libfreenect2::Frame* depth = kin_dev.get_frame(libfreenect2::Frame::Depth);
+
+            // Create Image from Color Frame
+            cv::Mat img_color(cv::Size(color->width, color->height), CV_8UC4, color->data);
+            // Create Image from Depth Frame
+            cv::Mat img_depth(cv::Size(depth->width, depth->height), CV_32FC1, depth->data);
+            // Flip the Image for Aruco Detection
+            cv::flip(img_color, img_color, 1);
+
+            // Send Image
+            sensor_msgs::ImagePtr msg_color = cv_bridge::CvImage(std_msgs::Header(), "bgra8", img_color).toImageMsg();
+            pub_color.publish(msg_color);
+            // Send Camera Info
+            sensor_msgs::CameraInfo info_camera_color = manager_color.getCameraInfo();
+            info_camera_color.header.stamp = ros::Time::now();
+            pub_camera_info_color.publish(info_camera_color);
+
+            // Flip the Image Back
+            cv::flip(img_color, img_color, 1);
+
+            libfreenect2::Frame undistorted(512, 424, 4);
+            libfreenect2::Frame registered(512, 424, 4);
+
+
+            libfreenect2::Registration* registration = kin_dev.get_registration();
+            registration->apply(color, depth, &undistorted, &registered);
+            registration->undistortDepth(depth, &undistorted);
+
+            cv::Mat img_registered(cv::Size(registered.width, registered.height), CV_8UC4, registered.data);
+            cv::imshow("Registered", img_registered);
+            cv::waitKey(1);
+
+            pcl::PointCloud<pcl::PointXYZRGB> cloud;
+            for (int i = 0; i < depth->height; i++) {
+                for (int j = 0; j < depth->width; j++ ) {
+                    float d = ((float*)(undistorted.data))[i * depth->width + j];
+
+                    pcl::PointXYZRGB point;
+                    float rgb;
+                    
+                    float x_raw = 0;
+                    float y_raw = 0;
+                    float z_raw = 0;
+                    registration->getPointXYZRGB(&undistorted, &registered, i, j, x_raw, y_raw, z_raw, rgb);
+                    
+                    point.x = x_raw;
+                    point.y = y_raw;
+                    point.z = z_raw;
+                    const uint8_t *p = reinterpret_cast<uint8_t*>(&rgb);
+                    point.b = p[0];
+                    point.g = p[1];
+                    point.r = p[2];
+                    cloud.points.push_back(point);
+                }
+            }
+
+            sensor_msgs::PointCloud2 cloud_msg;
+            pcl::toROSMsg(cloud, cloud_msg);
+            cloud_msg.header.frame_id = "world";
+            cloud_msg.header.stamp = ros::Time::now();
+            pub_cloud.publish(cloud_msg);
 
             if (show) {
-                cv::imshow("Color A", img_color_a);
-                cv::imshow("Color B", img_color_b);
-                cv::resizeWindow("Color A", cv::Size(960, 540));
-                cv::resizeWindow("Color B", cv::Size(960, 540));
+                cv::imshow("Color", img_color);
+                cv::resizeWindow("Color", cv::Size(color->width / 2, color->height / 2));
                 char c = cv::waitKey(1);
                 if (c == ' ') {
                     while (cv::waitKey(1) != ' ') {
@@ -107,8 +143,8 @@ int main(int argc, char** argv) {
                     }   
                 }
             }
-            kin_dev_a.release_frames();
-            kin_dev_b.release_frames();
+
+            kin_dev.release_frames();
             
         }
     } catch (std::exception e) {

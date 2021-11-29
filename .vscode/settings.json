@@ -6,5 +6,8 @@
         "array": "cpp",
         "string": "cpp",
         "string_view": "cpp"
-    }
+    },
+    "python.analysis.extraPaths": [
+        "/opt/ros/noetic/lib/python3/dist-packages"
+    ]
 }

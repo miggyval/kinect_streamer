@@ -33,10 +33,12 @@ private:
 public:
     KinectDevice(std::string serial);
     ~KinectDevice();
+    void wait_frames();
     libfreenect2::Frame* get_frame(libfreenect2::Frame::Type type);
     void release_frames();
     int start();
     int stop();
+    libfreenect2::Registration* get_registration();
 };
 }
 

@@ -25,4 +25,11 @@
   <exec_depend>roscpp</exec_depend>
   <exec_depend>kinect_streamer_lib</exec_depend>
   <exec_depend>std_msgs</exec_depend>
+
+
+  <exec_depend>pcl_conversions</exec_depend>
+  <exec_depend>pcl_ros</exec_depend>
+  <exec_depend>libpcl-all</exec_depend>
+
+
 </package>

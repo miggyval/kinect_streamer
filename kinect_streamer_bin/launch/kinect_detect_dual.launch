@@ -1,0 +1,42 @@
+<!-- Run the aruco_detect node -->
+<launch>
+  <!-- namespace for camera input -->
+  <arg name="verbose" default="false"/>
+
+  <node pkg="aruco_detect" name="aruco_detect_a"
+    type="aruco_detect" output="screen" respawn="false">
+    <param name="image_transport" value="compressed"/>
+    <param name="publish_images" value="true" />
+    <param name="fiducial_len" value="0.12"/>
+    <param name="dictionary" value="1"/>
+    <param name="do_pose_estimation" value="true"/>
+    <param name="vis_msgs" value="false"/>
+    <param name="ignore_fiducials" value=""/>
+    <param name="fiducial_len_override" value=""/>
+    <param name="verbose" value="$(arg verbose)"/>
+    <remap from="camera/compressed" to="color_a/image_raw/compressed"/>
+    <remap from="camera_info" to="color_a/camera_info"/>
+    <remap from="fiducial_vertices" to="color_a/fiducial_vertices"/>
+    <remap from="fiducial_transforms" to="color_a/fiducial_transforms"/>
+    <remap from="fiducial_images" to="color_a/fiducial_images"/>
+  </node>
+  
+  <node pkg="aruco_detect" name="aruco_detect_b"
+    type="aruco_detect" output="screen" respawn="false">
+    <param name="image_transport" value="compressed"/>
+    <param name="publish_images" value="true" />
+    <param name="fiducial_len" value="0.12"/>
+    <param name="dictionary" value="1"/>
+    <param name="do_pose_estimation" value="true"/>
+    <param name="vis_msgs" value="false"/>
+    <param name="ignore_fiducials" value=""/>
+    <param name="fiducial_len_override" value=""/>
+    <param name="verbose" value="$(arg verbose)"/>
+    <remap from="camera/compressed" to="color_b/image_raw/compressed"/>
+    <remap from="camera_info" to="color_b/camera_info"/>
+    <remap from="fiducial_vertices" to="color_b/fiducial_vertices"/>
+    <remap from="fiducial_transforms" to="color_b/fiducial_transforms"/>
+    <remap from="fiducial_images" to="color_b/fiducial_images"/>
+  </node>
+  
+</launch>
