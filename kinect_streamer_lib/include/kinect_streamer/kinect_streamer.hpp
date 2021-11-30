@@ -28,12 +28,15 @@ private:
     libfreenect2::PacketPipeline *pipeline;
     libfreenect2::Registration* registration;
     libfreenect2::SyncMultiFrameListener* listener;
+    libfreenect2::Freenect2Device::ColorCameraParams color_params;
+    libfreenect2::Freenect2Device::IrCameraParams ir_params;
     std::string serial;
     libfreenect2::FrameMap frames;
 public:
     KinectDevice(std::string serial);
     ~KinectDevice();
     void wait_frames();
+    void init_registration();
     libfreenect2::Frame* get_frame(libfreenect2::Frame::Type type);
     void release_frames();
     int start();
