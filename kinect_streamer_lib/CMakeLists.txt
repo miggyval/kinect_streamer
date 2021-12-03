@@ -18,6 +18,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)
 find_package( freenect2 REQUIRED )
 find_package( OpenCV REQUIRED )
 find_package( camera_info_manager REQUIRED )
+find_package( CUDA REQUIRED )
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
@@ -36,8 +37,9 @@ include_directories(
 	$ENV{HOME}/argparse/include
 )
 
+cuda_add_library( kinect_depth src/kinect_depth.cu )
 add_library( kinect_streamer_lib SHARED src/kinect_streamer.cpp )
 
-target_link_libraries( kinect_streamer_lib ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${GTK3_LIBRARIES} stdc++fs )
+target_link_libraries( kinect_streamer_lib ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${GTK3_LIBRARIES} ${CUDA_LIBRARIES} kinect_depth stdc++fs )
 
 add_compile_options(${GTK3_CFLAGS_OTHER})

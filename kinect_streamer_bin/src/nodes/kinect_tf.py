@@ -6,19 +6,27 @@ def callback_a(data):
     for fid_tf in data.transforms:
         transform = fid_tf.transform
         id = fid_tf.fiducial_id
+        if id not in [1, 2]:
+            continue
         br = tf.TransformBroadcaster()
         translation = (transform.translation.x, transform.translation.y, transform.translation.z)
         rotation = (transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w)
-        br.sendTransform(translation, rotation, rospy.Time.now(), "world", "id" + str(id) + "a")
+        parent = "world"
+        child = "id" + str(id) + "a"
+        br.sendTransform(translation, rotation, rospy.Time.now(), parent, child)
 
 def callback_b(data):
     for fid_tf in data.transforms:
         transform = fid_tf.transform
         id = fid_tf.fiducial_id
+        if id not in [1, 2]:
+            continue
         br = tf.TransformBroadcaster()
         translation = (transform.translation.x, transform.translation.y, transform.translation.z)
         rotation = (transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w)
-        br.sendTransform(translation, rotation, rospy.Time.now(), "world", "id" + str(id) + "b")
+        parent = "world"
+        child = "id" + str(id) + "b"
+        br.sendTransform(translation, rotation, rospy.Time.now(), parent, child)
 
 
 class KinectTransform:

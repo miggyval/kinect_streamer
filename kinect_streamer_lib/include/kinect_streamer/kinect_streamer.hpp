@@ -42,6 +42,7 @@ public:
     int start();
     int stop();
     libfreenect2::Registration* get_registration();
+    void getPointCloud(const float* data, float* X, float* Y, float* Z, int width, int height);
 };
 }
 

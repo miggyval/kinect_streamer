@@ -11,6 +11,7 @@ find_package( sensor_msgs REQUIRED )
 find_package( cv_bridge REQUIRED )
 find_package( PkgConfig REQUIRED )
 find_package( camera_info_manager REQUIRED )
+find_package( CUDA REQUIRED )
 
 find_package(catkin REQUIRED COMPONENTS
   kinect_streamer_lib
