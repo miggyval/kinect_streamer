@@ -1,0 +1,18 @@
+<!-- Run the aruco_detect node -->
+<launch>
+  <!-- namespace for camera input -->
+  <arg name="verbose" default="false"/>
+
+  <include file="$(find kinect_streamer_bin)/launch/kinect_detect_dual.launch"/>
+  
+  <node pkg="kinect_streamer_bin" name="kinect_camera_dual"
+    type="kinect_camera_dual" output="screen">
+  </node>
+  <node pkg="kinect_streamer_bin" name="kinect_tf"
+    type="kinect_tf.py" output="screen">
+  </node>
+  <node pkg="rviz" name="rviz"
+    type="rviz" output="screen" args="-d $(find kinect_streamer_bin)/launch/kinect.rviz">
+  </node>
+  
+</launch>

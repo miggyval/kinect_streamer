@@ -20,6 +20,12 @@ find_package( OpenCV REQUIRED )
 find_package( camera_info_manager REQUIRED )
 find_package( CUDA REQUIRED )
 
+find_package( PCL REQUIRED )
+find_package(catkin REQUIRED COMPONENTS
+	pcl_conversions
+	pcl_ros
+)
+
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 
@@ -45,6 +51,6 @@ add_library( kinect_streamer_lib SHARED src/kinect_streamer.cpp )
 link_directories(${PCL_LIBRARY_DIRS})
 
 target_link_libraries( kinect_streamer_lib ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${GTK3_LIBRARIES} ${CUDA_LIBRARIES} kinect_depth stdc++fs )
-target_link_libraries( kinect_depth ${CUDA_LIBRARIES} )
+target_link_libraries( kinect_depth ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CUDA_LIBRARIES} )
 
 add_compile_options(${GTK3_CFLAGS_OTHER})

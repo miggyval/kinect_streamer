@@ -32,6 +32,10 @@
 #include <cstdio>
 #include <cstring>
 
+#define myUINT8 1
+#define myFLOAT32 7
+
+
 #define MAX_DEPTH 5000.0
 
 bool protonect_shutdown = false; ///< Whether the running application should shut down.
@@ -103,11 +107,12 @@ int main(int argc, char** argv) {
     while (ros::ok() && !protonect_shutdown) {
         
         kin_dev_a.wait_frames();
+        kin_dev_b.wait_frames();
+
         libfreenect2::Frame* color_a = kin_dev_a.get_frame(libfreenect2::Frame::Color);
         libfreenect2::Frame* depth_a = kin_dev_a.get_frame(libfreenect2::Frame::Depth);
         libfreenect2::Frame* ir_a = kin_dev_a.get_frame(libfreenect2::Frame::Ir);
 
-        kin_dev_b.wait_frames();
         libfreenect2::Frame* color_b = kin_dev_b.get_frame(libfreenect2::Frame::Color);
         libfreenect2::Frame* depth_b = kin_dev_b.get_frame(libfreenect2::Frame::Depth);
         libfreenect2::Frame* ir_b = kin_dev_b.get_frame(libfreenect2::Frame::Ir);
@@ -164,52 +169,62 @@ int main(int argc, char** argv) {
         registration_b->undistortDepth(depth_b, &undistorted_b);
         
         
-        pcl::PointCloud<pcl::PointXYZ> cloud_a;
-        pcl::PointCloud<pcl::PointXYZ> cloud_b;
+        pcl::PointCloud<pcl::PointXYZRGB> cloud_a;
+        pcl::PointCloud<pcl::PointXYZRGB> cloud_b;
 
         cloud_a.points.reserve(DEPTH_W * DEPTH_H);
         cloud_b.points.reserve(DEPTH_W * DEPTH_H);
-        
+
         const int arr_len = DEPTH_W * DEPTH_H;
         const int arr_size = DEPTH_W * DEPTH_H * sizeof(float);
 
-        float *X_a = (float*)malloc(arr_size);
-        float *Y_a = (float*)malloc(arr_size);
-        float *Z_a = (float*)malloc(arr_size);;
-
-        float *X_b = (float*)malloc(arr_size);
-        float *Y_b = (float*)malloc(arr_size);
-        float *Z_b = (float*)malloc(arr_size);
-
-        kin_dev_a.getPointCloud((const float*)undistorted_a.data, X_a, Y_a, Z_a, DEPTH_W, DEPTH_H);
-        kin_dev_b.getPointCloud((const float*)undistorted_b.data, X_b, Y_b, Z_b, DEPTH_W, DEPTH_H);
-
-        for (int i = 0; i < arr_len; i++) {
-            cloud_a.points.push_back(pcl::PointXYZ(X_a[i], Y_a[i], Z_a[i]));
-            cloud_b.points.push_back(pcl::PointXYZ(X_b[i], Y_b[i], Z_b[i]));
-        }
-
         sensor_msgs::PointCloud2 cloud_msg_a;
-        pcl::toROSMsg(cloud_a, cloud_msg_a);
+        sensor_msgs::PointCloud2 cloud_msg_b;
+
+        cloud_msg_a.height = 1;
+        cloud_msg_a.width = DEPTH_W * DEPTH_H
+        /*
+        cloud_msg_a.fields[0] = myFLOAT32;
+        cloud_msg_a.fields[1] = myFLOAT32;
+        cloud_msg_a.fields[2] = myFLOAT32;
+        cloud_msg_a.fields[3] = myUINT8;
+        cloud_msg_a.fields[4] = myUINT8;
+        cloud_msg_a.fields[5] = myUINT8;
+        */
+        cloud_msg_a.is_bigendian = false;
+        cloud_msg_a.point_step = 3 * sizeof(float_t) + 3 * sizeof(uint8_t);
+        cloud_msg_a.row_step = cloud_msg_a.point_step * cloud_msg_a.width;
+        cloud_msg_a.is_dense = false;
+
+        cloud_msg_b.height = 1;
+        cloud_msg_b.width = DEPTH_W * DEPTH_H
+        /*
+        cloud_msg_b.fields[0] = myFLOAT32;
+        cloud_msg_b.fields[1] = myFLOAT32;
+        cloud_msg_b.fields[2] = myFLOAT32;
+        cloud_msg_b.fields[3] = myUINT8;
+        cloud_msg_b.fields[4] = myUINT8;
+        cloud_msg_b.fields[5] = myUINT8;
+        */
+        cloud_msg_b.is_bigendian = false;
+        cloud_msg_b.point_step = 3 * sizeof(float_t) + 3 * sizeof(uint8_t);
+        cloud_msg_b.row_step = cloud_msg_b.point_step * cloud_msg_b.width;
+        cloud_msg_b.is_dense = false;
+
+        kin_dev_a.getPointCloud((const float*)undistorted_a.data, (const uint32_t*)registered_a.data, (uint8_t*)cloud_msg_a.data.data(), DEPTH_W, DEPTH_H);
+        kin_dev_b.getPointCloud((const float*)undistorted_b.data, (const uint32_t*)registered_b.data, (uint8_t*)cloud_msg_b.data.data(), DEPTH_W, DEPTH_H);
+        ros::Time now = ros::Time::now();
+
+        //pcl::toROSMsg(cloud_a, cloud_msg_a);
         cloud_msg_a.header.frame_id = "color_a";
-        cloud_msg_a.header.stamp = ros::Time::now();
+        cloud_msg_a.header.stamp = now;
         pub_cloud_a.publish(cloud_msg_a);
 
-        sensor_msgs::PointCloud2 cloud_msg_b;
-        pcl::toROSMsg(cloud_b, cloud_msg_b);
+        //pcl::toROSMsg(cloud_b, cloud_msg_b);
         cloud_msg_b.header.frame_id = "color_b";
-        cloud_msg_b.header.stamp = ros::Time::now();
+        cloud_msg_b.header.stamp = now;
         pub_cloud_b.publish(cloud_msg_b);
-        
 
-        free(X_a);
-        free(Y_a);
-        free(Z_a);
-
-        free(X_b);
-        free(Y_b);
-        free(Z_b);
-        
 
         kin_dev_a.release_frames();
         kin_dev_b.release_frames();

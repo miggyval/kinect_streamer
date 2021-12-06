@@ -2,10 +2,10 @@ import rospy
 from fiducial_msgs.msg import *
 import geometry_msgs
 import tf
-from tf.transformations import quaternion_matrix
+from tf.transformations import quaternion_matrix, quaternion_slerp
 import numpy as np
 
-weight = 1.0
+weight = 0.9
 class KinectTransform:
     def __init__(self):
         rospy.init_node("kinect_transform")
@@ -22,7 +22,7 @@ class KinectTransform:
         if self.transformation_b is not None:
             br.sendTransform(self.transformation_b.translation, self.transformation_b.rotation, rospy.Time.now(), "color_b", "id1")
 
-    
+
     
     def update_a(self, translation_meas_a, rotation_meas_a):
         if (self.transformation_a is None):
@@ -32,8 +32,7 @@ class KinectTransform:
             return
         if np.linalg.norm(self.transformation_a.translation - translation_meas_a) < 1.0:
             self.transformation_a.translation = self.transformation_a.translation * weight + translation_meas_a * (1 - weight)
-            self.transformation_a.rotation = self.transformation_a.rotation * weight + rotation_meas_a * (1 - weight)
-            self.transformation_a.rotation = self.transformation_a.rotation / np.linalg.norm(self.transformation_a.rotation)
+            self.transformation_a.rotation = quaternion_slerp(self.transformation_a.rotation, rotation_meas_a, weight)
 
     def update_b(self, translation_meas_b, rotation_meas_b):
         if (self.transformation_b is None):
@@ -43,8 +42,7 @@ class KinectTransform:
             return
         if np.linalg.norm(self.transformation_b.translation - translation_meas_b) < 1.0:
             self.transformation_b.translation = self.transformation_b.translation * weight + translation_meas_b * (1 - weight)
-            self.transformation_b.rotation = self.transformation_b.rotation * weight + rotation_meas_b * (1 - weight)
-            self.transformation_b.rotation = self.transformation_b.rotation / np.linalg.norm(self.transformation_b.rotation)
+            self.transformation_b.rotation = quaternion_slerp(self.transformation_b.rotation, rotation_meas_b, weight)
         
 
     def callback_a(self, data):

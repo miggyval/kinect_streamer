@@ -10,6 +10,11 @@
 #include <libfreenect2/logger.h>
 
 
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/filters/voxel_grid.h>
+
 #define COLOR_W 1920
 #define COLOR_H 1080
 #define DEPTH_W 512
@@ -42,7 +47,7 @@ public:
     int start();
     int stop();
     libfreenect2::Registration* get_registration();
-    void getPointCloud(const float* data, float* X, float* Y, float* Z, int width, int height);
+    void getPointCloud(const float* depth, const uint32_t* registered, uint8_t* cloud_data, int width, int height);
 };
 }
 

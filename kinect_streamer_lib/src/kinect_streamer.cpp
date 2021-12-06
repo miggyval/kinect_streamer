@@ -20,6 +20,7 @@ KinectDevice::KinectDevice(std::string serial) {
     pipeline = new libfreenect2::CudaPacketPipeline();
     freenect2 = new libfreenect2::Freenect2;
     listener = new libfreenect2::SyncMultiFrameListener(libfreenect2::Frame::Color | libfreenect2::Frame::Ir | libfreenect2::Frame::Depth);
+    
     if (freenect2->enumerateDevices() == 0) {
         std::cout << "No devices found!" << std::endl;
         throw std::exception();
@@ -47,45 +48,45 @@ int KinectDevice::stop() {
     return dev->stop();
 }
 
-void KinectDevice::getPointCloud(const float* data, float* X, float* Y, float* Z, int width, int height) {
-    int size = DEPTH_W * DEPTH_H * sizeof(float);
+void KinectDevice::getPointCloud(const float* depth, const uint32_t* registered, uint8_t* cloud_data, int width, int height) {
 
-    float *D = (float*)malloc(size);
-    memcpy(D, data, size);
-    float *X_gpu = NULL;
-    float *Y_gpu = NULL;
-    float *Z_gpu = NULL;
-    float *D_gpu = NULL;
+    float* D = (float*)malloc(DEPTH_W * DEPTH_H * sizeof(float));
+    memcpy(D, depth, DEPTH_W * DEPTH_H * sizeof(float));
+    uint32_t* R = (uint32_t*)malloc(DEPTH_W * DEPTH_H * sizeof(uint32_t));
+    memcpy(R, registered, DEPTH_W * DEPTH_H * sizeof(uint32_t));
+
+    uint8_t* cloud_data_gpu;
+    float* X_gpu = NULL;
+    float* D_gpu = NULL;
+    uint32_t* R_gpu = NULL;
 
     cudaError_t err = cudaSuccess;
-    err = cudaMalloc((void**)&X_gpu, size);
-    err = cudaMalloc((void**)&Y_gpu, size);
-    err = cudaMalloc((void**)&Z_gpu, size);
-    err = cudaMalloc((void**)&D_gpu, size);
+    err = cudaMalloc((void**)&cloud_data_gpu, DEPTH_W * DEPTH_H * sizeof(uint8_t));
 
-    err = cudaMemcpy(D_gpu, D, size, cudaMemcpyHostToDevice);
+    err = cudaMalloc((void**)&D_gpu, DEPTH_W * DEPTH_H * sizeof(float));
+    err = cudaMalloc((void**)&R_gpu, DEPTH_W * DEPTH_H * sizeof(uint32_t));
+
+    err = cudaMemcpy(D_gpu, D, DEPTH_W * DEPTH_H * sizeof(float), cudaMemcpyHostToDevice);
+    err = cudaMemcpy(R_gpu, R, DEPTH_W * DEPTH_H * sizeof(uint32_t), cudaMemcpyHostToDevice);
+
 
     float cx = ir_params.cx;
     float cy = ir_params.cy;
     float fx = 1 / ir_params.fx;
     float fy = 1 / ir_params.fy;
 
-    getPointXYZHelper(D_gpu, X_gpu, Y_gpu, Z_gpu, cx, cy, fx, fy, DEPTH_W, DEPTH_H);
-
-    err = cudaMemcpy(X, X_gpu, size, cudaMemcpyDeviceToHost);
-    err = cudaMemcpy(Y, Y_gpu, size, cudaMemcpyDeviceToHost);
-    err = cudaMemcpy(Z, Z_gpu, size, cudaMemcpyDeviceToHost);
-    
-    err = cudaFree(X_gpu);
-    err = cudaFree(Y_gpu);
-    err = cudaFree(Z_gpu);
+    getPointXYZHelper(D_gpu, R_gpu, cloud_data_gpu, cx, cy, fx, fy, DEPTH_W, DEPTH_H);
+    err = cudaFree(&cloud_data_gpu);
     err = cudaFree(D_gpu);
+    err = cudaFree(R_gpu);
 
     err = cudaGetLastError();
     if (err != cudaSuccess) {
-        printf("%s\n\r", cudaGetErrorString(err));
+        printf("%s ", cudaGetErrorString(err));
     }
+
     free(D);
+    free(R);
 
 }
 
