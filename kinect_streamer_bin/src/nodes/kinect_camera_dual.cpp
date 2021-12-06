@@ -44,7 +44,7 @@ void sigint_handler(int s) {
 // roslaunch aruco_detect aruco_detect.launch camera:=/color_b image:=/image_raw dictionary:=1 fiducial_len:=0.120 publish_images:=true
 
 int main(int argc, char** argv) {
-    libfreenect2::setGlobalLogger(NULL);
+    //libfreenect2::setGlobalLogger(NULL);
     std::string serial_a = "501530742442";
     std::string serial_b = "226287140347";
     ros::init(argc, argv, "kinect_camera");
@@ -159,15 +159,18 @@ int main(int argc, char** argv) {
         
         registration_a->apply(color_a, depth_a, &undistorted_a, &registered_a);
         registration_b->apply(color_b, depth_b, &undistorted_b, &registered_b);
+
         registration_a->undistortDepth(depth_a, &undistorted_a);
         registration_b->undistortDepth(depth_b, &undistorted_b);
         
         
         pcl::PointCloud<pcl::PointXYZ> cloud_a;
         pcl::PointCloud<pcl::PointXYZ> cloud_b;
+
         cloud_a.points.reserve(DEPTH_W * DEPTH_H);
         cloud_b.points.reserve(DEPTH_W * DEPTH_H);
-
+        
+        const int arr_len = DEPTH_W * DEPTH_H;
         const int arr_size = DEPTH_W * DEPTH_H * sizeof(float);
 
         float *X_a = (float*)malloc(arr_size);
@@ -181,17 +184,20 @@ int main(int argc, char** argv) {
         kin_dev_a.getPointCloud((const float*)undistorted_a.data, X_a, Y_a, Z_a, DEPTH_W, DEPTH_H);
         kin_dev_b.getPointCloud((const float*)undistorted_b.data, X_b, Y_b, Z_b, DEPTH_W, DEPTH_H);
 
-        std::cout << cloud_a.points.capacity() << std::endl;
+        for (int i = 0; i < arr_len; i++) {
+            cloud_a.points.push_back(pcl::PointXYZ(X_a[i], Y_a[i], Z_a[i]));
+            cloud_b.points.push_back(pcl::PointXYZ(X_b[i], Y_b[i], Z_b[i]));
+        }
 
         sensor_msgs::PointCloud2 cloud_msg_a;
         pcl::toROSMsg(cloud_a, cloud_msg_a);
-        cloud_msg_a.header.frame_id = "id1a";
+        cloud_msg_a.header.frame_id = "color_a";
         cloud_msg_a.header.stamp = ros::Time::now();
         pub_cloud_a.publish(cloud_msg_a);
 
         sensor_msgs::PointCloud2 cloud_msg_b;
         pcl::toROSMsg(cloud_b, cloud_msg_b);
-        cloud_msg_b.header.frame_id = "id1b";
+        cloud_msg_b.header.frame_id = "color_b";
         cloud_msg_b.header.stamp = ros::Time::now();
         pub_cloud_b.publish(cloud_msg_b);
         

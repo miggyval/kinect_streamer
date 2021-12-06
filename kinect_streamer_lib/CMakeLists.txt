@@ -31,15 +31,20 @@ catkin_package(
 
 include_directories(
 	include
+    ${catkin_INCLUDE_DIRS}
 	${freenect2_INCLUDE_DIR}
 	${OpenCV_INCLUDE_DIRS}
 	${GTK3_INCLUDE_DIRS}
 	$ENV{HOME}/argparse/include
+	${PCL_INCLUDE_DIRS}
 )
 
 cuda_add_library( kinect_depth src/kinect_depth.cu )
 add_library( kinect_streamer_lib SHARED src/kinect_streamer.cpp )
 
-target_link_libraries( kinect_streamer_lib ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${GTK3_LIBRARIES} ${CUDA_LIBRARIES} kinect_depth stdc++fs )
+link_directories(${PCL_LIBRARY_DIRS})
+
+target_link_libraries( kinect_streamer_lib ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${GTK3_LIBRARIES} ${CUDA_LIBRARIES} kinect_depth stdc++fs )
+target_link_libraries( kinect_depth ${CUDA_LIBRARIES} )
 
 add_compile_options(${GTK3_CFLAGS_OTHER})

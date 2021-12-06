@@ -1,39 +1,79 @@
 import rospy
 from fiducial_msgs.msg import *
+import geometry_msgs
 import tf
+from tf.transformations import quaternion_matrix
+import numpy as np
 
-def callback_a(data):
-    for fid_tf in data.transforms:
-        transform = fid_tf.transform
-        id = fid_tf.fiducial_id
-        if id not in [1, 2]:
-            continue
-        br = tf.TransformBroadcaster()
-        translation = (transform.translation.x, transform.translation.y, transform.translation.z)
-        rotation = (transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w)
-        parent = "world"
-        child = "id" + str(id) + "a"
-        br.sendTransform(translation, rotation, rospy.Time.now(), parent, child)
-
-def callback_b(data):
-    for fid_tf in data.transforms:
-        transform = fid_tf.transform
-        id = fid_tf.fiducial_id
-        if id not in [1, 2]:
-            continue
-        br = tf.TransformBroadcaster()
-        translation = (transform.translation.x, transform.translation.y, transform.translation.z)
-        rotation = (transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w)
-        parent = "world"
-        child = "id" + str(id) + "b"
-        br.sendTransform(translation, rotation, rospy.Time.now(), parent, child)
-
-
+weight = 1.0
 class KinectTransform:
     def __init__(self):
         rospy.init_node("kinect_transform")
-        rospy.Subscriber("/color_a/fiducial_transforms", FiducialTransformArray, callback=callback_a)
-        rospy.Subscriber("/color_b/fiducial_transforms", FiducialTransformArray, callback=callback_b)
+        self.transformation_a = None
+        self.transformation_b = None
+        rospy.Timer(rospy.Duration(0.001), callback=self.callback_timer)
+        rospy.Subscriber("/color_a/fiducial_transforms", FiducialTransformArray, callback=self.callback_a)
+        rospy.Subscriber("/color_b/fiducial_transforms", FiducialTransformArray, callback=self.callback_b)
+
+    def callback_timer(self, data):
+        br = tf.TransformBroadcaster()
+        if self.transformation_a is not None:
+            br.sendTransform(self.transformation_a.translation, self.transformation_a.rotation, rospy.Time.now(), "color_a", "id1")
+        if self.transformation_b is not None:
+            br.sendTransform(self.transformation_b.translation, self.transformation_b.rotation, rospy.Time.now(), "color_b", "id1")
+
+    
+    
+    def update_a(self, translation_meas_a, rotation_meas_a):
+        if (self.transformation_a is None):
+            self.transformation_a = geometry_msgs.msg.Transform()
+            self.transformation_a.translation = translation_meas_a
+            self.transformation_a.rotation = rotation_meas_a
+            return
+        if np.linalg.norm(self.transformation_a.translation - translation_meas_a) < 1.0:
+            self.transformation_a.translation = self.transformation_a.translation * weight + translation_meas_a * (1 - weight)
+            self.transformation_a.rotation = self.transformation_a.rotation * weight + rotation_meas_a * (1 - weight)
+            self.transformation_a.rotation = self.transformation_a.rotation / np.linalg.norm(self.transformation_a.rotation)
+
+    def update_b(self, translation_meas_b, rotation_meas_b):
+        if (self.transformation_b is None):
+            self.transformation_b = geometry_msgs.msg.Transform()
+            self.transformation_b.translation = translation_meas_b
+            self.transformation_b.rotation = rotation_meas_b
+            return
+        if np.linalg.norm(self.transformation_b.translation - translation_meas_b) < 1.0:
+            self.transformation_b.translation = self.transformation_b.translation * weight + translation_meas_b * (1 - weight)
+            self.transformation_b.rotation = self.transformation_b.rotation * weight + rotation_meas_b * (1 - weight)
+            self.transformation_b.rotation = self.transformation_b.rotation / np.linalg.norm(self.transformation_b.rotation)
+        
+
+    def callback_a(self, data):
+        for fid_tf in data.transforms:
+            id = fid_tf.fiducial_id
+            if id != 1:
+                continue
+            transform_meas_a = fid_tf.transform
+            translation_meas_a = np.array([transform_meas_a.translation.x, transform_meas_a.translation.y, transform_meas_a.translation.z])
+            rotation_meas_a = np.array([transform_meas_a.rotation.x, transform_meas_a.rotation.y, transform_meas_a.rotation.z, transform_meas_a.rotation.w])
+            R = quaternion_matrix(rotation_meas_a)[:3, :3]
+            translation_meas_a = -R.T @ translation_meas_a
+            rotation_meas_a[:3] *= -1
+            self.update_a(translation_meas_a, rotation_meas_a)
+
+
+    def callback_b(self, data):
+        for fid_tf in data.transforms:
+            id = fid_tf.fiducial_id
+            if id != 1:
+                continue
+            transform_meas_b = fid_tf.transform
+            translation_meas_b = np.array([transform_meas_b.translation.x, transform_meas_b.translation.y, transform_meas_b.translation.z])
+            rotation_meas_b = np.array([transform_meas_b.rotation.x, transform_meas_b.rotation.y, transform_meas_b.rotation.z, transform_meas_b.rotation.w])
+
+            R = quaternion_matrix(rotation_meas_b)[:3, :3]
+            translation_meas_b = -R.T @ translation_meas_b
+            rotation_meas_b[:3] *= -1
+            self.update_b(translation_meas_b, rotation_meas_b)
 
 if __name__ == "__main__":
     kinect_tf = KinectTransform()
