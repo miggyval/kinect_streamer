@@ -46,6 +46,8 @@ class KinectTransform:
         
 
     def callback_a(self, data):
+        self.update_a(np.array([0, 0, 0]), np.array([0, 0, 0, 1]))
+        pass
         for fid_tf in data.transforms:
             id = fid_tf.fiducial_id
             if id != 1:
@@ -60,6 +62,8 @@ class KinectTransform:
 
 
     def callback_b(self, data):
+        self.update_b(np.array([0, 0, 0]), np.array([0, 0, 0, 1]))
+        pass
         for fid_tf in data.transforms:
             id = fid_tf.fiducial_id
             if id != 1:

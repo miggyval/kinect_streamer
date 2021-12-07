@@ -48,9 +48,9 @@ void sigint_handler(int s) {
 // roslaunch aruco_detect aruco_detect.launch camera:=/color_b image:=/image_raw dictionary:=1 fiducial_len:=0.120 publish_images:=true
 
 int main(int argc, char** argv) {
-    //libfreenect2::setGlobalLogger(NULL);
-    std::string serial_a = "501530742442";
-    std::string serial_b = "226287140347";
+    libfreenect2::setGlobalLogger(NULL);
+    std::string serial_a = "097377233947";
+    std::string serial_b = "220183535047";
     ros::init(argc, argv, "kinect_camera");
     bool show = false;
     bool info = true;
@@ -130,14 +130,17 @@ int main(int argc, char** argv) {
 
         cv::medianBlur(img_depth_a, img_depth_a, 5);
         cv::medianBlur(img_depth_b, img_depth_b, 5);
+        
         cv::flip(img_color_a, img_color_a, 1);
         cv::flip(img_color_b, img_color_b, 1);
 
         // Send Image
         sensor_msgs::ImagePtr msg_color_a = cv_bridge::CvImage(std_msgs::Header(), "bgra8", img_color_a).toImageMsg();
         sensor_msgs::ImagePtr msg_color_b = cv_bridge::CvImage(std_msgs::Header(), "bgra8", img_color_b).toImageMsg();
+
         pub_color_a.publish(msg_color_a);
         pub_color_b.publish(msg_color_b);
+        
         // Send Camera Info
         sensor_msgs::CameraInfo info_camera_color_a = manager_color_a.getCameraInfo();
         sensor_msgs::CameraInfo info_camera_color_b = manager_color_b.getCameraInfo();
@@ -179,56 +182,38 @@ int main(int argc, char** argv) {
         const int arr_size = DEPTH_W * DEPTH_H * sizeof(float);
 
         sensor_msgs::PointCloud2 cloud_msg_a;
-        sensor_msgs::PointCloud2 cloud_msg_b;
-
+        pcl::toROSMsg(cloud_a, cloud_msg_a);
+        cloud_msg_a.header.frame_id = "color_a";
         cloud_msg_a.height = 1;
-        cloud_msg_a.width = DEPTH_W * DEPTH_H
-        /*
-        cloud_msg_a.fields[0] = myFLOAT32;
-        cloud_msg_a.fields[1] = myFLOAT32;
-        cloud_msg_a.fields[2] = myFLOAT32;
-        cloud_msg_a.fields[3] = myUINT8;
-        cloud_msg_a.fields[4] = myUINT8;
-        cloud_msg_a.fields[5] = myUINT8;
-        */
-        cloud_msg_a.is_bigendian = false;
-        cloud_msg_a.point_step = 3 * sizeof(float_t) + 3 * sizeof(uint8_t);
-        cloud_msg_a.row_step = cloud_msg_a.point_step * cloud_msg_a.width;
+        cloud_msg_a.width = DEPTH_W * DEPTH_H;
         cloud_msg_a.is_dense = false;
+        cloud_msg_a.row_step = cloud_msg_a.point_step * cloud_msg_a.width;
+        cloud_msg_a.data.reserve(cloud_msg_a.width * cloud_msg_a.point_step);
+        cloud_msg_a.data.resize(cloud_msg_a.width * cloud_msg_a.point_step);
 
+        sensor_msgs::PointCloud2 cloud_msg_b;
+        pcl::toROSMsg(cloud_b, cloud_msg_b);
+        cloud_msg_b.header.frame_id = "color_b";
         cloud_msg_b.height = 1;
-        cloud_msg_b.width = DEPTH_W * DEPTH_H
-        /*
-        cloud_msg_b.fields[0] = myFLOAT32;
-        cloud_msg_b.fields[1] = myFLOAT32;
-        cloud_msg_b.fields[2] = myFLOAT32;
-        cloud_msg_b.fields[3] = myUINT8;
-        cloud_msg_b.fields[4] = myUINT8;
-        cloud_msg_b.fields[5] = myUINT8;
-        */
-        cloud_msg_b.is_bigendian = false;
-        cloud_msg_b.point_step = 3 * sizeof(float_t) + 3 * sizeof(uint8_t);
-        cloud_msg_b.row_step = cloud_msg_b.point_step * cloud_msg_b.width;
+        cloud_msg_b.width = DEPTH_W * DEPTH_H;
         cloud_msg_b.is_dense = false;
+        cloud_msg_b.row_step = cloud_msg_b.point_step * cloud_msg_b.width;
+        cloud_msg_b.data.reserve(cloud_msg_b.width * cloud_msg_b.point_step);
+        cloud_msg_b.data.resize(cloud_msg_b.width * cloud_msg_b.point_step);
 
         kin_dev_a.getPointCloud((const float*)undistorted_a.data, (const uint32_t*)registered_a.data, (uint8_t*)cloud_msg_a.data.data(), DEPTH_W, DEPTH_H);
         kin_dev_b.getPointCloud((const float*)undistorted_b.data, (const uint32_t*)registered_b.data, (uint8_t*)cloud_msg_b.data.data(), DEPTH_W, DEPTH_H);
+
         ros::Time now = ros::Time::now();
 
-        //pcl::toROSMsg(cloud_a, cloud_msg_a);
-        cloud_msg_a.header.frame_id = "color_a";
         cloud_msg_a.header.stamp = now;
         pub_cloud_a.publish(cloud_msg_a);
 
-        //pcl::toROSMsg(cloud_b, cloud_msg_b);
-        cloud_msg_b.header.frame_id = "color_b";
         cloud_msg_b.header.stamp = now;
         pub_cloud_b.publish(cloud_msg_b);
 
-
         kin_dev_a.release_frames();
         kin_dev_b.release_frames();
-        
     }
     kin_dev_a.stop();
     kin_dev_b.stop();

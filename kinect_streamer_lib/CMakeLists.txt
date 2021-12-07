@@ -10,7 +10,6 @@ set(kinect_streamer_VERSION 1.0)
 include(GenerateExportHeader)
 
 set( freenect2_DIR $ENV{HOME}/freenect2/lib/cmake/freenect2)
-set( OpenCV_DIR $ENV{HOME}/opencv/build)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)

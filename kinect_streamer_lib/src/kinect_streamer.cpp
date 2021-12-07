@@ -50,43 +50,39 @@ int KinectDevice::stop() {
 
 void KinectDevice::getPointCloud(const float* depth, const uint32_t* registered, uint8_t* cloud_data, int width, int height) {
 
-    float* D = (float*)malloc(DEPTH_W * DEPTH_H * sizeof(float));
-    memcpy(D, depth, DEPTH_W * DEPTH_H * sizeof(float));
-    uint32_t* R = (uint32_t*)malloc(DEPTH_W * DEPTH_H * sizeof(uint32_t));
-    memcpy(R, registered, DEPTH_W * DEPTH_H * sizeof(uint32_t));
-
-    uint8_t* cloud_data_gpu;
-    float* X_gpu = NULL;
-    float* D_gpu = NULL;
-    uint32_t* R_gpu = NULL;
+    uint8_t* cloud_data_gpu = NULL;
+    float* depth_gpu = NULL;
+    uint32_t* registered_gpu = NULL;
 
     cudaError_t err = cudaSuccess;
-    err = cudaMalloc((void**)&cloud_data_gpu, DEPTH_W * DEPTH_H * sizeof(uint8_t));
+    const int point_step = 32;
+    err = cudaMalloc((void**)&cloud_data_gpu, DEPTH_W * DEPTH_H * point_step);
 
-    err = cudaMalloc((void**)&D_gpu, DEPTH_W * DEPTH_H * sizeof(float));
-    err = cudaMalloc((void**)&R_gpu, DEPTH_W * DEPTH_H * sizeof(uint32_t));
+    err = cudaMalloc((void**)&depth_gpu, DEPTH_W * DEPTH_H * sizeof(float));
+    err = cudaMalloc((void**)&registered_gpu, DEPTH_W * DEPTH_H * sizeof(uint32_t));
 
-    err = cudaMemcpy(D_gpu, D, DEPTH_W * DEPTH_H * sizeof(float), cudaMemcpyHostToDevice);
-    err = cudaMemcpy(R_gpu, R, DEPTH_W * DEPTH_H * sizeof(uint32_t), cudaMemcpyHostToDevice);
-
+    err = cudaMemcpy(depth_gpu, depth, DEPTH_W * DEPTH_H * sizeof(float), cudaMemcpyHostToDevice);
+    err = cudaMemcpy(registered_gpu, registered, DEPTH_W * DEPTH_H * sizeof(uint32_t), cudaMemcpyHostToDevice);
 
     float cx = ir_params.cx;
     float cy = ir_params.cy;
     float fx = 1 / ir_params.fx;
     float fy = 1 / ir_params.fy;
 
-    getPointXYZHelper(D_gpu, R_gpu, cloud_data_gpu, cx, cy, fx, fy, DEPTH_W, DEPTH_H);
-    err = cudaFree(&cloud_data_gpu);
-    err = cudaFree(D_gpu);
-    err = cudaFree(R_gpu);
+    getPointXYZHelper(depth_gpu, registered_gpu, cloud_data_gpu, cx, cy, fx, fy, DEPTH_W, DEPTH_H);
+
+    err = cudaDeviceSynchronize();
+    err = cudaMemcpy(cloud_data, cloud_data_gpu, DEPTH_W * DEPTH_H * point_step, cudaMemcpyDeviceToHost);
+
+    err = cudaFree(cloud_data_gpu);
+    err = cudaFree(depth_gpu);
+    err = cudaFree(registered_gpu);
 
     err = cudaGetLastError();
     if (err != cudaSuccess) {
-        printf("%s ", cudaGetErrorString(err));
+        printf("%s %d\n\r", cudaGetErrorString(err), __LINE__);
     }
 
-    free(D);
-    free(R);
 
 }
 
