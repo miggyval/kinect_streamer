@@ -21,7 +21,7 @@ __global__ void getPointXYZ(const float* D, const uint32_t* R, uint8_t* cloud_da
             /* z-value */
             *(float*)(ptr + 8) = depth_val;
             /* rgb-value */
-            *(float*)(ptr + 16) = R[i];
+            *(uint32_t*)(ptr + 16) = R[i];
         }
     }
 }

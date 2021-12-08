@@ -42,12 +42,17 @@ public:
     ~KinectDevice();
     void wait_frames();
     void init_registration();
+    void init_params();
     libfreenect2::Frame* get_frame(libfreenect2::Frame::Type type);
     void release_frames();
     int start();
     int stop();
     libfreenect2::Registration* get_registration();
     void getPointCloud(const float* depth, const uint32_t* registered, uint8_t* cloud_data, int width, int height);
+    void set_color_params(float cx, float cy, float fx, float fy);
+    void set_ir_params(float cx, float cy, float fx, float fy, float k1, float k2, float k3, float p1, float p2);
+    void get_color_params(float& cx, float& cy, float& fx, float& fy);
+    void get_ir_params(float& cx, float& cy, float& fx, float& fy, float k1, float k2, float k3, float p1, float p2);
 };
 }
 

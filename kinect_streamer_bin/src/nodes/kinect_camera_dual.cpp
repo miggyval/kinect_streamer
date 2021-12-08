@@ -49,8 +49,10 @@ void sigint_handler(int s) {
 
 int main(int argc, char** argv) {
     libfreenect2::setGlobalLogger(NULL);
-    std::string serial_a = "097377233947";
-    std::string serial_b = "220183535047";
+    std::string serial_a = "501530742442";
+    std::string serial_b = "226287140347";
+    //std::string serial_a = "097377233947";
+    //std::string serial_b = "220183535047";
     ros::init(argc, argv, "kinect_camera");
     bool show = false;
     bool info = true;
@@ -67,6 +69,9 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh_camera_info_color_a;
     ros::NodeHandle nh_camera_info_color_b;
 
+    ros::NodeHandle nh_camera_info_ir_a;
+    ros::NodeHandle nh_camera_info_ir_b;
+
     /* Two clouds! */
     ros::NodeHandle nh_cloud_a;
     ros::NodeHandle nh_cloud_b;
@@ -74,35 +79,95 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh_camera_color_a("color_a");
     ros::NodeHandle nh_camera_color_b("color_b");
 
+    ros::NodeHandle nh_camera_ir_a("ir_a");
+    ros::NodeHandle nh_camera_ir_b("ir_b");
+
     camera_info_manager::CameraInfoManager manager_color_a(nh_camera_color_a, "color_a");
     camera_info_manager::CameraInfoManager manager_color_b(nh_camera_color_b, "color_b");
+
+    camera_info_manager::CameraInfoManager manager_ir_a(nh_camera_ir_a, "ir_a");
+    camera_info_manager::CameraInfoManager manager_ir_b(nh_camera_ir_b, "ir_b");
     
     ros::Publisher pub_camera_info_color_a = nh_camera_info_color_a.advertise<sensor_msgs::CameraInfo>("color_a/camera_info", 1);
     ros::Publisher pub_camera_info_color_b = nh_camera_info_color_b.advertise<sensor_msgs::CameraInfo>("color_b/camera_info", 1);
+
+    ros::Publisher pub_camera_info_ir_a = nh_camera_info_ir_a.advertise<sensor_msgs::CameraInfo>("ir_a/camera_info", 1);
+    ros::Publisher pub_camera_info_ir_b = nh_camera_info_ir_b.advertise<sensor_msgs::CameraInfo>("ir_b/camera_info", 1);
+
     if (!manager_color_a.loadCameraInfo("")) {
-        std::cout << "Failed to get calibration from Color .yaml" << std::endl;
+        std::cout << "Failed to get calibration from Color A.yaml" << std::endl;
     }
     if (!manager_color_b.loadCameraInfo("")) {
-        std::cout << "Failed to get calibration from Color .yaml" << std::endl;
+        std::cout << "Failed to get calibration from Color B.yaml" << std::endl;
     }
-    if (!manager_color_a.isCalibrated()) {
-        std::cout << "Color is not calibrated." << std::endl;
+    if (!manager_ir_a.loadCameraInfo("")) {
+        std::cout << "Failed to get calibration from IR A.yaml" << std::endl;
     }
-    if (!manager_color_b.isCalibrated()) {
-        std::cout << "Color is not calibrated." << std::endl;
+    if (!manager_ir_b.loadCameraInfo("")) {
+        std::cout << "Failed to get calibration from IR B .yaml" << std::endl;
     }
+
+    kin_dev_a.init_params();
+    kin_dev_b.init_params();
+
+    sensor_msgs::CameraInfo info_color_a = manager_color_a.getCameraInfo();
+    sensor_msgs::CameraInfo info_color_b = manager_color_b.getCameraInfo();
+    float cx_color_a, cy_color_a, fx_color_a, fy_color_a;
+    float cx_color_b, cy_color_b, fx_color_b, fy_color_b;
+    kin_dev_a.get_color_params(cx_color_a, cy_color_a, fx_color_a, fy_color_a);
+    kin_dev_b.get_color_params(cx_color_b, cy_color_b, fx_color_b, fy_color_b);
+    info_color_a.K[2] = cx_color_a;
+    info_color_a.K[5] = cy_color_a;
+    info_color_a.K[0] = fx_color_a;
+    info_color_a.K[4] = fy_color_a;
+    info_color_b.K[2] = cx_color_b;
+    info_color_b.K[5] = cy_color_b;
+    info_color_b.K[0] = fx_color_b;
+    info_color_b.K[4] = fy_color_b;
+    manager_color_a.setCameraInfo(info_color_a);
+    manager_color_b.setCameraInfo(info_color_b);
+
+    
+    sensor_msgs::CameraInfo info_ir_a = manager_ir_a.getCameraInfo();
+    sensor_msgs::CameraInfo info_ir_b = manager_ir_b.getCameraInfo();
+    float cx_ir_a, cy_ir_a, fx_ir_a, fy_ir_a, k1_ir_a, k2_ir_a, k3_ir_a, p1_ir_a, p2_ir_a;
+    float cx_ir_b, cy_ir_b, fx_ir_b, fy_ir_b, k1_ir_b, k2_ir_b, k3_ir_b, p1_ir_b, p2_ir_b;
+    kin_dev_a.get_ir_params(cx_ir_a, cy_ir_a, fx_ir_a, fy_ir_a, k1_ir_a, k2_ir_a, k3_ir_a, p1_ir_a, p2_ir_a);
+    kin_dev_b.get_ir_params(cx_ir_b, cy_ir_b, fx_ir_b, fy_ir_b, k1_ir_b, k2_ir_b, k3_ir_b, p1_ir_b, p2_ir_b);
+    info_ir_a.K[2] = cx_ir_a;
+    info_ir_a.K[5] = cy_ir_a;
+    info_ir_a.K[0] = fx_ir_a;
+    info_ir_a.K[4] = fy_ir_a;
+    info_ir_a.D[0] = p1_ir_a;
+    info_ir_a.D[1] = p2_ir_a;
+    info_ir_a.D[2] = k1_ir_a;
+    info_ir_a.D[3] = k2_ir_a;
+    info_ir_a.D[4] = k3_ir_a;
+    manager_ir_a.setCameraInfo(info_ir_a);
+    manager_ir_b.setCameraInfo(info_ir_b);
+    
+    kin_dev_a.init_registration();
+    kin_dev_b.init_registration();
+    
     ros::NodeHandle nh_color_a;
     ros::NodeHandle nh_color_b;
+    ros::NodeHandle nh_ir_a;
+    ros::NodeHandle nh_ir_b;
+
     image_transport::ImageTransport it_color_a(nh_color_a);
     image_transport::ImageTransport it_color_b(nh_color_b);
+
+    image_transport::ImageTransport it_ir_a(nh_ir_a);
+    image_transport::ImageTransport it_ir_b(nh_ir_b);
+
     image_transport::Publisher pub_color_a = it_color_a.advertise("color_a/image_raw", 1);
     image_transport::Publisher pub_color_b = it_color_b.advertise("color_b/image_raw", 1);
 
+    image_transport::Publisher pub_ir_a = it_ir_a.advertise("ir_a/image_raw", 1);
+    image_transport::Publisher pub_ir_b = it_ir_b.advertise("ir_b/image_raw", 1);
+
     ros::Publisher pub_cloud_a = nh_cloud_a.advertise<sensor_msgs::PointCloud2>("/points_a", 1);
     ros::Publisher pub_cloud_b = nh_cloud_b.advertise<sensor_msgs::PointCloud2>("/points_b", 1);
-
-    kin_dev_a.init_registration();
-    kin_dev_b.init_registration();
 
     while (ros::ok() && !protonect_shutdown) {
         
@@ -126,7 +191,17 @@ int main(int argc, char** argv) {
         // Create Image from IR Frame
         cv::Mat img_ir_a(cv::Size(ir_a->width, ir_a->height), CV_32FC1, ir_a->data);
         cv::Mat img_ir_b(cv::Size(ir_b->width, ir_b->height), CV_32FC1, ir_b->data);
-        // Flip the Image for Aruco Detection
+        img_ir_a /= 8.0;
+        img_ir_b /= 8.0;
+        cv::Mat img_ir_a_mono8;
+        cv::Mat img_ir_b_mono8;
+        img_ir_a.convertTo(img_ir_a_mono8, CV_8UC1);
+        img_ir_b.convertTo(img_ir_b_mono8, CV_8UC1);
+
+        cv::Mat img_ir_a_bilat;
+        cv::Mat img_ir_b_bilat;
+        cv::bilateralFilter(img_ir_a_mono8, img_ir_a_bilat, 0, 0.0, 5.0);
+        cv::bilateralFilter(img_ir_b_mono8, img_ir_b_bilat, 0, 0.0, 5.0);
 
         cv::medianBlur(img_depth_a, img_depth_a, 5);
         cv::medianBlur(img_depth_b, img_depth_b, 5);
@@ -134,22 +209,37 @@ int main(int argc, char** argv) {
         cv::flip(img_color_a, img_color_a, 1);
         cv::flip(img_color_b, img_color_b, 1);
 
+        cv::flip(img_ir_a_bilat, img_ir_a_bilat, 1);
+        cv::flip(img_ir_b_bilat, img_ir_b_bilat, 1);
+
         // Send Image
         sensor_msgs::ImagePtr msg_color_a = cv_bridge::CvImage(std_msgs::Header(), "bgra8", img_color_a).toImageMsg();
         sensor_msgs::ImagePtr msg_color_b = cv_bridge::CvImage(std_msgs::Header(), "bgra8", img_color_b).toImageMsg();
-
+        sensor_msgs::ImagePtr msg_ir_a = cv_bridge::CvImage(std_msgs::Header(), "mono8", img_ir_a_bilat).toImageMsg();
+        sensor_msgs::ImagePtr msg_ir_b = cv_bridge::CvImage(std_msgs::Header(), "mono8", img_ir_b_bilat).toImageMsg();
+    
         pub_color_a.publish(msg_color_a);
         pub_color_b.publish(msg_color_b);
         
+        pub_ir_a.publish(msg_ir_a);
+        pub_ir_b.publish(msg_ir_b);
         // Send Camera Info
         sensor_msgs::CameraInfo info_camera_color_a = manager_color_a.getCameraInfo();
         sensor_msgs::CameraInfo info_camera_color_b = manager_color_b.getCameraInfo();
+        sensor_msgs::CameraInfo info_camera_ir_a = manager_ir_a.getCameraInfo();
+        sensor_msgs::CameraInfo info_camera_ir_b = manager_ir_b.getCameraInfo();
 
         info_camera_color_a.header.stamp = ros::Time::now();
         info_camera_color_b.header.stamp = ros::Time::now();
 
         pub_camera_info_color_a.publish(info_camera_color_a);
         pub_camera_info_color_b.publish(info_camera_color_b);
+
+        info_camera_ir_a.header.stamp = ros::Time::now();
+        info_camera_ir_b.header.stamp = ros::Time::now();
+
+        pub_camera_info_ir_a.publish(info_camera_ir_a);
+        pub_camera_info_ir_b.publish(info_camera_ir_b);
 
         // Flip the Image Back
         cv::flip(img_color_a, img_color_a, 1);

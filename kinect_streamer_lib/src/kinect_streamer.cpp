@@ -32,12 +32,57 @@ KinectDevice::KinectDevice(std::string serial) {
     dev->setColorFrameListener(listener);
     dev->setIrAndDepthFrameListener(listener);
 }
+void KinectDevice::set_color_params(float cx, float cy, float fx, float fy) {
+    color_params.cx = cx;
+    color_params.cy = cy;
+    color_params.fx = fx;
+    color_params.fy = fy;
+    dev->setColorCameraParams(color_params);
+}
+
+
+void KinectDevice::get_color_params(float& cx, float& cy, float& fx, float& fy) {
+    cx = color_params.cx;
+    cy = color_params.cy;
+    fx = color_params.fx;
+    fy = color_params.fy;
+}
+
+void KinectDevice::set_ir_params(float cx, float cy, float fx, float fy, float k1, float k2, float k3, float p1, float p2) {
+    ir_params.cx = cx;
+    ir_params.cy = cy;
+    ir_params.fx = fx;
+    ir_params.fy = fy;
+    ir_params.k1 = k1;
+    ir_params.k2 = k2;
+    ir_params.k3 = k3;
+    ir_params.p1 = p1;
+    ir_params.p2 = p2;
+    dev->setIrCameraParams(ir_params);
+}
+
+void KinectDevice::get_ir_params(float& cx, float& cy, float& fx, float& fy, float k1, float k2, float k3, float p1, float p2) {
+    cx = ir_params.cx;
+    cy = ir_params.cy;
+    fx = ir_params.fx;
+    fy = ir_params.fy;
+    k1 = ir_params.k1;
+    k2 = ir_params.k2;
+    k3 = ir_params.k3;
+    p1 = ir_params.p1;
+    p2 = ir_params.p2;
+}
 
 void KinectDevice::init_registration() {
-    color_params = dev->getColorCameraParams();
-    ir_params = dev->getIrCameraParams();   
     registration = new libfreenect2::Registration(ir_params, color_params);
 }
+
+
+void KinectDevice::init_params() {
+    color_params = dev->getColorCameraParams();
+    ir_params = dev->getIrCameraParams();   
+}
+
 
 int KinectDevice::start() {
     return dev->start();
