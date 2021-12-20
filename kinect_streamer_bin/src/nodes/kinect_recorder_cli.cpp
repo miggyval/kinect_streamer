@@ -64,6 +64,7 @@ void iter_delete(fs::path path) {
 int yn_func() {
     std::string yn;
     std::cin >> yn;
+    return 1;
     if (yn == std::string("Y") || yn == std::string("y")) {
         return 1;
     } else if (yn == std::string("N") || yn == std::string("n")) {
@@ -90,9 +91,6 @@ void decision(void (*yf)(void), void (*nf)(void)) {
 int main(int argc, char** argv) {
  
     KinectRecorderArgs args = argparse::parse<KinectRecorderArgs>(argc, argv);
-    namedWindow("Color", WINDOW_NORMAL);
-    resizeWindow("Color", Size(1280, 720));
-
     signal(SIGINT, pre_handler);
 
     const int fps = args.fps;
@@ -199,6 +197,10 @@ int main(int argc, char** argv) {
         }
     }
     
+    std::string windowName = std::string("color_") + serial;
+    namedWindow(windowName, WINDOW_NORMAL);
+    resizeWindow(windowName, Size(1280, 720));
+
     auto begin = std::chrono::high_resolution_clock::now();
 
     time_t rawtime;
@@ -251,7 +253,7 @@ int main(int argc, char** argv) {
             libfreenect2::Frame *depth = frames[libfreenect2::Frame::Depth];
             Mat img_color(Size(color->width, color->height), CV_8UC4, color->data);
             cvtColor(img_color, img_color, COLOR_BGRA2BGR);
-            imshow("Color", img_color);
+            imshow(windowName, img_color);
             char c = waitKey(1);
             if (c == ' ' || c == 'p') {
                 auto start_pause = std::chrono::high_resolution_clock::now();
@@ -264,7 +266,7 @@ int main(int argc, char** argv) {
                     }
                     Mat img_paused = img_color * 0.3;
                     putText(img_paused, "PAUSED", Point(COLOR_W / 2 - 128, COLOR_H / 2 - 10), FONT_HERSHEY_PLAIN,  5, Scalar(128, 128, 128), 2);
-                    imshow("Color", img_paused);
+                    imshow(windowName, img_paused);
                     c = waitKey(1);
                 }
                 auto end_pause = std::chrono::high_resolution_clock::now();
@@ -294,7 +296,7 @@ int main(int argc, char** argv) {
             Mat img_resized;
             resize(img_converted, img_resized, Size(COLOR_W, COLOR_H));
             Mat img_depth = Mat::zeros(Size(DEPTH_W, DEPTH_H), CV_32FC1);
-            imshow("Color", img_resized);
+            imshow(windowName, img_resized);
             char c = waitKey(1);
             if (c == ' ' || c == 'p') {
                 auto start_pause = std::chrono::high_resolution_clock::now();
@@ -307,7 +309,7 @@ int main(int argc, char** argv) {
                     }
                     Mat img_paused = img_resized * 0.3;
                     putText(img_paused, "PAUSED", Point(COLOR_W / 2 - 128, COLOR_H / 2 - 10), FONT_HERSHEY_PLAIN,  5, Scalar(128, 128, 128), 2);
-                    imshow("Color", img_paused);
+                    imshow(windowName, img_paused);
                     c = waitKey(1);
                 }
                 auto end_pause = std::chrono::high_resolution_clock::now();
