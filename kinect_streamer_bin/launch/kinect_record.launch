@@ -1,10 +1,9 @@
 <launch>
   <arg name="verbose" default="true"/>
   <node pkg="kinect_streamer_bin" name="kinect_recorder_a"
-    type="kinect_recorder_cli" output="screen" args="/media/medrobotics/STARS_B/2021_12_20_A -f 15 -s 226287140347 -y">
+    type="kinect_recorder_cli" output="screen" args="/media/medrobotics/STARS_B/HA01_2021_12_21_A -f 15 -s 226287140347">
   </node>
   <node pkg="kinect_streamer_bin" name="kinect_recorder_b"
-    type="kinect_recorder_cli" output="screen" args="/media/medrobotics/STARS_B/2021_12_20_B -f 15 -s 501530742442 -y">
+    type="kinect_recorder_cli" output="screen" args="/media/medrobotics/STARS_B/HA01_2021_12_21_B -f 15 -s 501530742442">
   </node>
-  
 </launch>

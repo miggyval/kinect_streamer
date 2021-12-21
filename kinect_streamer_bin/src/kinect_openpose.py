@@ -63,7 +63,7 @@ def main():
         # Process Image
         for i in range(10000):
             datum = op.Datum()
-            string = '/home/medrobotics/kinect_ws/src/kinect_streamer/test/color/' + str(i) + '.bin'
+            string = '/media/medrobotics/STARS_B/2021_12_20_A/color/' + str(i) + '.bin'
             imageToProcess = np.fromfile(string, dtype=np.uint8)
             imageToProcess = np.reshape(imageToProcess, (1080, 1920, 4))
             imageToProcess = imageToProcess[:, :, :3].copy()
@@ -87,14 +87,16 @@ def main():
                         if datum.poseKeypoints[j][k][2] != 0.0:
                             variance += (datum.poseKeypoints[j][k][:2] - mean) * (datum.poseKeypoints[j][k][:2] - mean) / count
                     std_dev = np.sqrt(variance)
+                    std_dev[0] = 10
+                    std_dev[1] = 10
                     x1 = min(max(int(mean[0] - 3 * std_dev[0]), 0), 1920)
                     x2 = min(max(int(mean[0] + 3 * std_dev[0]), 0), 1920)
                     y1 = min(max(int(mean[1] - 3 * std_dev[1]), 0), 1080)
                     y2 = min(max(int(mean[1] + 3 * std_dev[1]), 0), 1080)
                     face = out[y1:y2, x1:x2]
-                    if face is not None and face.size != 0:
-                        face = cv2.GaussianBlur(face, (101, 101), 100)
-                    out[y1:y2, x1:x2] = face
+                    #if face is not None and face.size != 0:
+                        #face = cv2.GaussianBlur(face, (101, 101), 100)
+                    #out[y1:y2, x1:x2] = face
             cv2.imshow("OpenPose 1.7.0 - Tutorial Python API", out)
             if cv2.waitKey(1) == ord('q'):
                 sys.exit(1)
