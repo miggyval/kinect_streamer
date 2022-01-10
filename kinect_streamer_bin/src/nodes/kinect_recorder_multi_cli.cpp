@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <string>
 #include <libfreenect2/libfreenect2.hpp>
 #include <libfreenect2/frame_listener_impl.h>
 #include <libfreenect2/registration.h>
@@ -43,6 +44,24 @@ void my_handler(int s) {
     flag = true;
 }
 
+bool is_valid_serial(std::string str) {
+    std::locale loc;
+    const char* buffer = str.c_str();
+    int count = 0;
+    char c = buffer[count];
+    while (c != 0) {
+        if (c < '0' && c > '9') {
+            return false;
+        }
+        count++;
+        c = buffer[count];
+    }
+    if (count != 12) {
+        return false;
+    }
+    return true;
+}
+
 namespace fs = std::experimental::filesystem;
 
 int main(int argc, char** argv) {
@@ -64,12 +83,23 @@ int main(int argc, char** argv) {
     std::map<std::string, libfreenect2::PacketPipeline*> pipelines;
     std::map<std::string, libfreenect2::SyncMultiFrameListener*> listeners;
     std::map<std::string, libfreenect2::FrameMap> frame_maps;
-    std::vector<std::string> serials = args.serials;
+    std::vector<std::string> serial_args = args.serials;
+    std::vector<std::string> serials;
+    for (std::string arg : serial_args) {
+        if (is_valid_serial(arg)) {
+            serials.push_back(arg);
+        }
+    }
 
     int num_devices = freenect2.enumerateDevices();
     if (num_devices == 0) {
         std::cout << "No devices detected!" << "\n\r";
         exit(-1);
+    } else {
+        std::cout << "Connected devices:" << "\n\r";
+        for (int idx = 0; idx < num_devices; idx++) {
+            std::cout << "- " << freenect2.getDeviceSerialNumber(idx) << "\n\r";
+        }
     }
 
     int n = serials.size();
@@ -123,9 +153,25 @@ int main(int argc, char** argv) {
     signal(SIGINT, my_handler);
     std::map<std::string, std::chrono::time_point<std::chrono::high_resolution_clock>> current_timestamps;
     std::map<std::string, std::chrono::time_point<std::chrono::high_resolution_clock>> starting_timestamps;
+    std::map<std::string, std::chrono::time_point<std::chrono::high_resolution_clock>> frame_time_start;
+    std::map<std::string, std::chrono::time_point<std::chrono::high_resolution_clock>> frame_time_end;
+    std::map<std::string, float> frame_rates;
+    for (std::string serial : serials) {
+        frame_rates[serial] = 0.0;
+    }
     int take = 0;
     int frame = 0;
     bool paused = true;
+    std::map<std::string, FILE*> f_colors;
+    std::map<std::string, FILE*> f_depths;
+    std::map<std::string, FILE*> f_times;
+    for (std::string serial : serials) {
+        f_colors[serial] = 0;
+        f_depths[serial] = 0;
+        f_times[serial] = 0;
+    }
+    FILE* f_depth = 0;
+    FILE* f_time = 0;
     while (!flag) {
         for (std::string serial : serials) {
             if (!paused) {
@@ -161,11 +207,11 @@ int main(int argc, char** argv) {
             (ptm->tm_sec) // Second
         );
         if (!paused && frame == 0) {
-            info_file.open(info_filename.c_str());
+            info_file.open(info_filename.c_str(), std::fstream::app);
             info_file << "Take " << take << ": " << "Start Time: " << std::string(datetime_buffer) << std::endl;
             info_file.close();
         }
-
+        int buffer = 0;
 
         for (std::string serial : serials) {
 
@@ -186,18 +232,9 @@ int main(int argc, char** argv) {
 
             int time = std::chrono::duration_cast<std::chrono::milliseconds>(current_timestamps[serial] - starting_timestamps[serial]).count();
             if (!paused) {
-                std::string color_filename = args.src_path + "/" + "takes" + "/" + std::to_string(take) + "/" + serial + "/" + "color" + "/" + std::to_string(frame) + ".bin";
-                std::string depth_filename = args.src_path + "/" + "takes" + "/" + std::to_string(take) + "/" + serial + "/" + "depth" + "/" + std::to_string(frame) + ".bin";
-                std::string time_filename = args.src_path + "/" + "takes" + "/" + std::to_string(take) + "/" + serial + "/" + "time" + "/" + std::to_string(frame) + ".bin";
-                FILE* f_color = fopen(color_filename.c_str(), "w+");
-                FILE* f_depth = fopen(depth_filename.c_str(), "w+");
-                FILE* f_time = fopen(time_filename.c_str(), "w+");
-                fwrite(color->data, color->bytes_per_pixel, color->width * color->height, f_color);
-                fwrite(depth->data, depth->bytes_per_pixel, depth->width * depth->height, f_depth);
-                fwrite(&time, sizeof(time), 1, f_time);
-	            fclose(f_color);
-	            fclose(f_depth);
-                fclose(f_time);
+                fwrite(color->data, color->bytes_per_pixel, color->width * color->height, f_colors[serial]);
+                fwrite(depth->data, depth->bytes_per_pixel, depth->width * depth->height, f_depths[serial]);
+                fwrite(&time, sizeof(time), 1, f_times[serial]);
             }
             char stopwatch_buffer[128];
             std::sprintf(
@@ -209,10 +246,21 @@ int main(int argc, char** argv) {
                 time % 1000
             );
 
+            auto timestamp = std::chrono::high_resolution_clock::now();
+            frame_time_end[serial] = timestamp;
+
+
+            int frame_period = std::chrono::duration_cast<std::chrono::milliseconds>(frame_time_end[serial] - frame_time_start[serial]).count();
+            frame_time_start[serial] = frame_time_end[serial];
+            double current_frame_rate = 1000.0 / (double)frame_period;
+            frame_rates[serial] = frame_rates[serial] * 0.95 + current_frame_rate * 0.05;
+            std::string frame_rate_string = std::to_string((int)round(frame_rates[serial]));
             cv::putText(img_display, stopwatch_buffer, cv::Point(20, 60), cv::FONT_HERSHEY_PLAIN, 3, cv::Scalar(0, 0, 0), 5);
             cv::putText(img_display, stopwatch_buffer, cv::Point(20, 60), cv::FONT_HERSHEY_PLAIN, 3, cv::Scalar(255, 255, 255), 2);  
             cv::putText(img_display, take_buffer, cv::Point(20, 110), cv::FONT_HERSHEY_PLAIN, 3, cv::Scalar(0, 0, 0), 5);
             cv::putText(img_display, take_buffer, cv::Point(20, 110), cv::FONT_HERSHEY_PLAIN, 3, cv::Scalar(255, 255, 255), 2);  
+            cv::putText(img_display, std::string("FPS: ") + frame_rate_string, cv::Point(20, 160), cv::FONT_HERSHEY_PLAIN, 3, cv::Scalar(0, 0, 0), 5);
+            cv::putText(img_display, std::string("FPS: ") + frame_rate_string, cv::Point(20, 160), cv::FONT_HERSHEY_PLAIN, 3, cv::Scalar(255, 255, 255), 2);  
 
             cv::imshow(serial, img_display);
             
@@ -243,9 +291,26 @@ int main(int argc, char** argv) {
             if (paused) {
                 take++;
                 for (std::string serial : serials) {
-                    fs::create_directories(fs::path(args.src_path + "/takes" + "/" + std::to_string(take) + "/" + serial + "/" + "color"));
-                    fs::create_directories(fs::path(args.src_path + "/takes" + "/" + std::to_string(take) + "/" + serial + "/" + "depth"));
-                    fs::create_directories(fs::path(args.src_path + "/takes" + "/" + std::to_string(take) + "/" + serial + "/" + "time"));
+                    if (f_colors[serial] != 0) {
+                        fclose(f_colors[serial]);
+                    }
+                    if (f_depths[serial] != 0) {
+                        fclose(f_depths[serial]);
+                    }
+                    if (f_times[serial] != 0) {
+                        fclose(f_times[serial]);
+                    }
+                    
+                    std::string save_string = args.src_path + "/" + "takes" + "/" + std::to_string(take) + "/" + serial;
+                    fs::create_directories(fs::path(save_string));
+                    
+                    std::string color_filename = save_string + "/" + "color.kraw";
+                    std::string depth_filename = save_string + "/" + "depth.kraw";
+                    std::string time_filename = save_string + "/" + "time.kraw";
+                    
+                    f_colors[serial] = fopen(color_filename.c_str(), "a+");
+                    f_depths[serial] = fopen(depth_filename.c_str(), "a+");
+                    f_times[serial] = fopen(time_filename.c_str(), "a+");
                 }
                 auto timestamp = std::chrono::high_resolution_clock::now();
                 for (std::string serial : serials) {

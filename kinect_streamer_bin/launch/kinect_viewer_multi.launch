@@ -1,0 +1,6 @@
+<launch>
+  <arg name="verbose" default="true"/>
+  <node pkg="kinect_streamer_bin" name="kinect_viewer_multi"
+    type="kinect_viewer_multi_cli" output="screen" args="/home/valencimm/Patient_A -s 220183535047 097377233947">
+  </node>
+</launch>

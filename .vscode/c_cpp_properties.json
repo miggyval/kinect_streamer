@@ -1,17 +1,20 @@
 {
-  "configurations": [
-    {
-      "browse": {
-        "databaseFilename": "",
-        "limitSymbolsToIncludedHeaders": true
-      },
-      "includePath": [
-        "/opt/ros/noetic/include/**",
-        "/home/valencimm/stars_ws/src/kinect_streamer/kinect_streamer_lib/include/**",
-        "/usr/include/**"
-      ],
-      "name": "ROS"
-    }
-  ],
-  "version": 4
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/opt/ros/noetic/include/**",
+                "/home/valencimm/catkin_ws/src/kinect_streamer/kinect_streamer_lib/include/**",
+                "/usr/include/**",
+                "/home/valencimm/**",
+                "/usr/include/opencv4",
+                "/usr/include/pcl-1.10"
+            ],
+            "name": "ROS"
+        }
+    ],
+    "version": 4
 }

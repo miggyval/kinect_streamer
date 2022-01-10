@@ -72,7 +72,9 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "bit": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "any": "cpp",
+        "valarray": "cpp"
     },
     "python.analysis.extraPaths": [
         "/opt/ros/noetic/lib/python3/dist-packages"
