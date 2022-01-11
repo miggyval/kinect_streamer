@@ -28,7 +28,6 @@
 struct KinectRecorderArgs : public argparse::Args {
     std::string &src_path = arg("directory path for recorded data");
     int &fps = kwarg("f,framerate", "framerate (fps)").set_default(15);
-    bool &webcam = flag("w,webcam", "use webcam instead of kinect").set_default(false);
     std::vector<std::string> &serials = kwarg("s,serials", "Serial Numbers").multi_argument();
 };
 
