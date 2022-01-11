@@ -68,7 +68,7 @@ https://github.com/OpenKinect/libfreenect2
 ### Installing argparse
 Follow instructions from morrisfranken:
 https://github.com/morrisfranken/argparse
-Essentially, place this respository into your home directory.
+- Essentially, place this respository into your home directory.
 
 ## Building with ROS (catkin)
 ```console
