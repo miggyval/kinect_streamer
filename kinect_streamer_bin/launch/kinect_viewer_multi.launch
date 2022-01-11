@@ -1,6 +1,6 @@
 <launch>
   <arg name="verbose" default="true"/>
   <node pkg="kinect_streamer_bin" name="kinect_viewer_multi"
-    type="kinect_viewer_multi_cli" output="screen" args="-f /home/valencimm/Patient_A/takes/3/097377233947/depth.kraw">
+    type="kinect_viewer_multi_cli" output="screen" args="-d /home/valencimm/.ros/kinect_recordings/2022-01-11-18-06-28-148518330 -v $(arg verbose)">
   </node>
 </launch>

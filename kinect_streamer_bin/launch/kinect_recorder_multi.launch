@@ -1,6 +1,8 @@
 <launch>
-  <arg name="verbose" default="true"/>
+  <param name="time" command="date +'%Y-%m-%d-%I-%M-%S-%N'"/>
+  <arg name="verbose" default="false"/>
+  <arg name="dir" default=""/>
   <node pkg="kinect_streamer_bin" name="kinect_recorder_multi"
-    type="kinect_recorder_multi_cli" output="screen" args="/home/valencimm/Patient_A -s 220183535047 097377233947">
+    type="kinect_recorder_multi_cli" output="screen" args="$(arg dir) -s 220183535047 097377233947 -v $(arg verbose)  ">
   </node>
 </launch>

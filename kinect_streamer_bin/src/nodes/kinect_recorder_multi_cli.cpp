@@ -26,9 +26,9 @@
 #include <kinect_streamer/kinect_streamer.hpp>
 
 struct KinectRecorderArgs : public argparse::Args {
-    std::string &src_path = arg("directory path for recorded data");
-    int &fps = kwarg("f,framerate", "framerate (fps)").set_default(15);
-    std::vector<std::string> &serials = kwarg("s,serials", "Serial Numbers").multi_argument();
+    std::string &src_path = arg("directory path for recorded data").set_default("");
+    std::vector<std::string> &serials = kwarg("s,serials", "Ser ial Numbers").multi_argument();
+    bool &verbose = kwarg("v,verbose", "A flag to toggle verbose").set_default(false);
 };
 
 int flag = false;
@@ -68,14 +68,10 @@ int main(int argc, char** argv) {
     KinectRecorderArgs args = argparse::parse<KinectRecorderArgs>(argc, argv);
     signal(SIGINT, pre_handler);
 
-    const int fps = args.fps;
-    if (fps <= 0 || fps > FPS_MAX) {
-        std::cout << "The framerate is invalid." << "\n\r";
-        std::cout << "Please choose a framerate between 1 and 30. (inclusive)" << "\n\r";
-        exit(-1);
-    }
 
-    libfreenect2::setGlobalLogger(NULL);
+    if (!args.verbose) {
+        libfreenect2::setGlobalLogger(NULL);
+    }
     libfreenect2::Freenect2 freenect2;
     std::map<std::string, libfreenect2::Freenect2Device*> devices;
     std::map<std::string, libfreenect2::Registration*> registrations;
@@ -120,18 +116,43 @@ int main(int argc, char** argv) {
         registrations[serial] = registration;
         listeners[serial] = listener;
     }
-    if (fs::exists(fs::path(args.src_path))) {
-        if (!fs::is_directory(args.src_path)) {
+
+    std::string src_path = args.src_path; 
+    if (src_path == "") {
+        time_t rawtime;
+        struct tm* ptm;
+        struct timespec* pts;
+        time ( &rawtime );
+        ptm = gmtime ( &rawtime );
+        clock_gettime(CLOCK_REALTIME, pts);
+        char datetime_buffer[128];
+        std::sprintf(
+            datetime_buffer,
+            "%04d-%02d-%02d-%02d-%02d-%02d-%06ld",
+            (ptm->tm_year + 1900), // Year
+            (ptm->tm_mon + 1), // Month
+            (ptm->tm_mday), // Day
+            (ptm->tm_hour + AEST) % 24, // Hour
+            (ptm->tm_min), // Minute
+            (ptm->tm_sec), // Second
+            (pts->tv_nsec) // Nanosecond
+        );
+        src_path = std::string("kinect_recordings/") + datetime_buffer;
+        std::cout << "No directory supplied as argument." << "\n\r";
+        std::cout << "Saving in default directory: " << getenv("HOME") << "/.ros/" << src_path << "\n\r";
+    }
+    if (fs::exists(fs::path(src_path))) {
+        if (!fs::is_directory(src_path)) {
             std::cout << "Not a valid directory." << std::endl;
             exit(-1);
         }
-        if (!fs::is_empty(args.src_path)) {
+        if (!fs::is_empty(src_path)) {
             std::cout << "Directory is not empty." << std::endl;
-            fs::remove_all(args.src_path);
+            fs::remove_all(src_path);
         }
     }
-    fs::create_directories(fs::path(args.src_path));
-    std::string info_filename = args.src_path + "/" + "info.txt";
+    fs::create_directories(fs::path(src_path));
+    std::string info_filename = src_path + "/" + "info.txt";
     std::ofstream info_file;
     info_file.open(info_filename.c_str());
     info_file << "serials:" << " ";
@@ -300,7 +321,7 @@ int main(int argc, char** argv) {
                         fclose(f_times[serial]);
                     }
                     
-                    std::string save_string = args.src_path + "/" + "takes" + "/" + std::to_string(take) + "/" + serial;
+                    std::string save_string = src_path + "/" + "takes" + "/" + std::to_string(take) + "/" + serial;
                     fs::create_directories(fs::path(save_string));
                     
                     std::string color_filename = save_string + "/" + "color.kraw";
