@@ -4,8 +4,7 @@
 * [**Description**](README.md#description)
 * [**Acknowledgements**](README.md#acknowledgements)
 * [**Prerequisites**](README.md#prerequisites)
-* [**Downloading**](README.md#downloading)
-* [**Building**](README.md#building)
+* [**Building with ROS (catkin)**](README.md#building)
 * [**Running KinectStreamer**](README.md#running-kinect-streamer)
 ## Description
 
