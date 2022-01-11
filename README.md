@@ -11,10 +11,8 @@
 Driver for recording and viewing Kinect v2 streams.
 
 **Features**
-- **kinect_recorder** -> Recording to disk from Kinect v2
-- **kinect_viewer** -> Viewing binary files written by program
-- **kinect_recorder_gui** -> GUI version of recorder
-- **kinect_viewer_gui** -> GUI version of viewer
+- **kinect_recorder_multi** -> Recording to disk from Kinect v2 with multiple Kinects
+- **kinect_viewer_multi** -> Viewing binary files written by program with multiple Kinects
 - See chapter [Running Kinect](README.md#running-kinect-streamer) below for usage
 
 ## Acknowledgements
