@@ -4,19 +4,16 @@
 * [**Description**](README.md#description)
 * [**Acknowledgements**](README.md#acknowledgements)
 * [**Prerequisites**](README.md#prerequisites)
-* [**Downloading**](README.md#downloading)
-* [**Building**](README.md#building)
+* [**Building with ROS (catkin)**](README.md#building-with-ros-catkin)
 * [**Running KinectStreamer**](README.md#running-kinect-streamer)
 ## Description
 
 Driver for recording and viewing Kinect v2 streams.
 
 **Features**
-- **kinect_recorder** -> Recording to disk from Kinect v2
-- **kinect_viewer** -> Viewing binary files written by program
-- **kinect_recorder_gui** -> GUI version of recorder
-- **kinect_viewer_gui** -> GUI version of viewer
-- See chapter [Running Kinect](README.md#running-kinect) below for usage
+- **kinect_recorder_multi** -> Recording to disk from Kinect v2 with multiple Kinects
+- **kinect_viewer_multi** -> Viewing binary files written by program with multiple Kinects
+- See chapter [Running Kinect](README.md#running-kinect-streamer) below for usage
 
 ## Acknowledgements
 - OpenKinect: libfreenect2
@@ -67,68 +64,41 @@ Follow instructions on OpenKinect GitHub
 https://github.com/OpenKinect/libfreenect2
 
 ### Installing argparse
-Follow instructions from morrisfranken
+Follow instructions from morrisfranken:
 https://github.com/morrisfranken/argparse
+- Essentially, place this respository into your home directory.
 
-## Downloading
-
-Through https
+## Building with ROS (catkin)
 ```console
-git clone https://github.com/uqmvale6/kinect_streamer.git
+cd ~/catkin_ws
 ```
-Through ssh
 ```console
-git clone git@github.com:uqmvale6/kinect_streamer.git
+mkdir src
 ```
-
-Through wget
 ```console
-wget -O main.zip https://github.com/uqmvale6/kinect_streamer/archive/refs/heads/main.zip
-unzip main.zip
-mv kinect_streamer-main kinect_streamer
+git clone https://github.com/uqmvale6/kinect_streamer.git src/kinect_streamer
 ```
-Through zip download
-- https://github.com/uqmvale6/kinect_streamer/archive/refs/heads/main.zip
-
-## Building
 ```console
-# Go to kinect_streamer directory
-cd kinect_streamer
-# (Optional) Set library directories in CMakeLists.txt for alternate installations
-set(freenect2_DIR <PATH>)
-set(OpenCV_DIR <PATH>)
-# Run CMake command
-cmake .
-# Run Makefile
-make -j`nproc`
+catkin_make
+```
+## Setting Up for Running with ROS
+```console
+cd ~/catkin_ws
+```
+```console
+source ./devel/setup.sh
 ```
 ## Running Kinect Streamer
 ### Recording to Disk
-- WARNING: Recommended disk space - 10 MB per frame (approx 28 FPS)
-- Example Space: 1 hour -> 1 TB
-- Compress after session
-#### Command Line
+- WARNING: Recommended disk space - ~20 MB per frame (approx 28 FPS)
+- Example Space: 1 hour -> 2 TB (for two Kinects running at 30 FPS)
 ```console
 # Usage
-./kinect_recorder <folder>
-# Example
-./kinect_recorder ${HOME}/Desktop/kinect_002/patient_x
-```
-#### GUI
-```console
-# Usage
-./kinect_recorder_gui
+roslaunch kinect_streamer_bin kinect_recorder_multi.launch
 ```
 ### Viewing from Disk
 #### Command Line
 ```console
 # Usage
-./kinect_viewer <folder>
-# Example
-./kinect_viewer ${HOME}/Desktop/kinect_002/patient_x
-```
-#### GUI
-```console
-# Usage
-./kinect_viewer_gui
+roslaunch kinect_streamer_bin kinect_viewer_multi.launch
 ```
