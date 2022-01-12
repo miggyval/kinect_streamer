@@ -3,7 +3,7 @@ cmake_minimum_required( VERSION 3.10 )
 project( kinect_streamer_bin )
 
 set( freenect2_DIR $ENV{HOME}/freenect2/lib/cmake/freenect2 )
-set( OpenCV_DIR ${CMAKE_SOURCE_DIR}/opencv/build )
+set( OpenCV_DIR /usr/local/lib/cmake/opencv4 )
 
 find_package( freenect2 REQUIRED )
 find_package( OpenCV REQUIRED )
@@ -31,6 +31,7 @@ pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 catkin_package(
   CATKIN_DEPENDS roscpp rospy std_msgs
 )
+
 
 include_directories(
     ${catkin_INCLUDE_DIRS}

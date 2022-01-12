@@ -22,12 +22,19 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/core/cuda.hpp>
+#include <opencv2/core/cuda.inl.hpp>
+#include <opencv2/core/cuda_types.hpp>
+#include <opencv2/core/cuda_types.hpp>
+#include <opencv2/cudaobjdetect.hpp>
+#include <opencv2/cudaimgproc.hpp>
+#include <opencv2/cudawarping.hpp>
 
 #include <kinect_streamer/kinect_streamer.hpp>
 
 struct KinectRecorderArgs : public argparse::Args {
     std::string &src_path = arg("directory path for recorded data").set_default("");
-    std::vector<std::string> &serials = kwarg("s,serials", "Ser ial Numbers").multi_argument();
+    std::vector<std::string> &serials = kwarg("s,serials", "Serial Numbers").multi_argument();
     bool &verbose = kwarg("v,verbose", "A flag to toggle verbose").set_default(false);
 };
 
@@ -64,7 +71,9 @@ bool is_valid_serial(std::string str) {
 namespace fs = std::experimental::filesystem;
 
 int main(int argc, char** argv) {
- 
+    std::cout << "CUDA Enabled Device Count: " << cv::cuda::getCudaEnabledDeviceCount() << "\n\r";
+    std::string face_cascade_name = "/usr/share/opencv4/haarcascades/haarcascade_frontalface_default.xml";
+    cv::Ptr<cv::cuda::CascadeClassifier> face_cascade = cv::cuda::CascadeClassifier::create(face_cascade_name);
     KinectRecorderArgs args = argparse::parse<KinectRecorderArgs>(argc, argv);
     signal(SIGINT, pre_handler);
 
@@ -244,6 +253,7 @@ int main(int argc, char** argv) {
             cv::cvtColor(img_color, img_color, cv::COLOR_BGRA2BGR);
             cv::Mat img_display;
             cv::flip(img_color, img_display, 1);
+
             if (paused) {
                 img_display *= 0.5;
                 cv::putText(img_display, "PAUSED", cv::Point(COLOR_W / 2 - 320, COLOR_H / 2 + 20), cv::FONT_HERSHEY_PLAIN, 10, cv::Scalar(0, 0, 0), 20);
@@ -281,9 +291,7 @@ int main(int argc, char** argv) {
             cv::putText(img_display, take_buffer, cv::Point(20, 110), cv::FONT_HERSHEY_PLAIN, 3, cv::Scalar(255, 255, 255), 2);  
             cv::putText(img_display, std::string("FPS: ") + frame_rate_string, cv::Point(20, 160), cv::FONT_HERSHEY_PLAIN, 3, cv::Scalar(0, 0, 0), 5);
             cv::putText(img_display, std::string("FPS: ") + frame_rate_string, cv::Point(20, 160), cv::FONT_HERSHEY_PLAIN, 3, cv::Scalar(255, 255, 255), 2);  
-
             cv::imshow(serial, img_display);
-            
             listeners[serial]->release(frame_maps[serial]);
 
         }

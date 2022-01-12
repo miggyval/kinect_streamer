@@ -15,6 +15,14 @@
 #include <opencv2/highgui.hpp>
 #include <kinect_streamer/kinect_streamer.hpp>
 
+#include "opencv2/objdetect.hpp"
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
+#include "opencv2/videoio.hpp"
+#include <iostream>
+
+using namespace cv;
+
 #define MODE_DIR    1
 #define MODE_FILE   2
 
@@ -23,7 +31,6 @@ struct KinectViewerArgs : public argparse::Args {
     std::string &src_file_path = kwarg("f,file", "file path for recorded data").set_default("");
 };
 
-using namespace cv;
 namespace fs = std::experimental::filesystem;
 const int color_size = COLOR_W * COLOR_H;
 const int depth_size = DEPTH_W * DEPTH_H;
@@ -57,6 +64,7 @@ bool ends_with(std::string const &str, std::string const &end) {
 
 int main(int argc, char** argv) {
 
+    cv::CascadeClassifier face_cascade;
     KinectViewerArgs args = argparse::parse<KinectViewerArgs>(argc, argv);
 
     std::vector<std::string> serial_args;
