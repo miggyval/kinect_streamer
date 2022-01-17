@@ -30,7 +30,6 @@ typedef struct ButtonData {
 
 typedef struct EntryData {
     GtkEntry* entry_folder;
-    GtkEntry* entry_fps;
     GtkComboBoxText* cbox_device;
 } EntryData;
 
@@ -79,17 +78,10 @@ static void callback_refresh_devices(GtkWidget* widget, gpointer user_data) {
 static void callback_start(GtkWidget* widget, gpointer user_data) {
     EntryData* entry_data = (EntryData*)user_data;
     GtkEntry* entry_folder = entry_data->entry_folder;
-    GtkEntry* entry_fps = entry_data->entry_fps;
     GtkComboBoxText* cbox_device = entry_data->cbox_device;
     char* text_folder = (char*)gtk_entry_get_text(entry_folder);
-    char* text_fps = (char*)gtk_entry_get_text(entry_fps);
     char* text_serial = (char*)gtk_combo_box_text_get_active_text(cbox_device);
-    char* args[] = {"rosrun kinect_streamer_bin kinect_recorder_cli", text_folder, "-f", text_fps, "-s", text_serial + kinect_prefix.length(), NULL};
-    for (int i = 0; i < 6; i++) {
-        std::cout << args[i] << " ";
-    }
-    std::cout << std::endl;
-    execvp(args[0], args);
+    std::cout << "TEST!" << std::endl;
 }
 
 static void callback_select_folder(GtkWidget* widget, gpointer user_data) {
@@ -125,7 +117,6 @@ int main(int argc, char** argv) {
     GtkBox* vbox;
     GtkBox* hbox_folder;
     GtkBox* hbox_device;
-    GtkBox* hbox_fps;
     GtkBox* hbox_start;
     GtkWindow* window;
     GtkButton* button_folder;
@@ -137,8 +128,6 @@ int main(int argc, char** argv) {
     GtkBox* box_start;
     GtkBox* box_refresh;
     GtkEntry* entry_folder;
-    GtkEntry* entry_fps;
-    GtkLabel* label_fps;
     GtkComboBoxText* cbox_device;
     GtkListStore *store;
     GtkTreeView* tree_view;
@@ -148,11 +137,8 @@ int main(int argc, char** argv) {
     /* Create a new window */
     window = (GtkWindow*)gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
-    label_fps       = (GtkLabel*)gtk_label_new("FPS:");
-
     /* Create entries */
     entry_folder    = (GtkEntry*)gtk_entry_new();
-    entry_fps       = (GtkEntry*)gtk_entry_new();
 
     /* Create buttons*/
     button_folder   = (GtkButton*)gtk_button_new();
@@ -196,9 +182,8 @@ int main(int argc, char** argv) {
         free(current_path);
     }
     
-    gtk_entry_set_text(entry_fps, "15");
     ButtonData button_data = (ButtonData){window, entry_folder};
-    EntryData entry_data = (EntryData){entry_folder, entry_fps, cbox_device};
+    EntryData entry_data = (EntryData){entry_folder, cbox_device};
     DeviceData device_data = (DeviceData){cbox_device};
 
     /* Connect the "clicked" signal of the button to our callback */
@@ -216,14 +201,11 @@ int main(int argc, char** argv) {
 
     hbox_folder = (GtkBox*)gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     hbox_device = (GtkBox*)gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    hbox_fps    = (GtkBox*)gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     hbox_start  = (GtkBox*)gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 
     gtk_box_pack_start(hbox_folder, (GtkWidget*)button_folder, FALSE, FALSE, 10);
     gtk_box_pack_start(hbox_folder, (GtkWidget*)entry_folder, FALSE, FALSE, 10);
 
-    gtk_box_pack_start(hbox_fps, (GtkWidget*)label_fps, FALSE, FALSE, 10);
-    gtk_box_pack_start(hbox_fps, (GtkWidget*)entry_fps, FALSE, FALSE, 10);
 
     gtk_box_pack_start(hbox_device, (GtkWidget*)button_device, FALSE, FALSE, 10);
     gtk_box_pack_start(hbox_device, (GtkWidget*)cbox_device, FALSE, FALSE, 10);
@@ -233,7 +215,6 @@ int main(int argc, char** argv) {
 
     gtk_box_pack_start(vbox, (GtkWidget*)hbox_folder, FALSE, FALSE, 10);
     gtk_box_pack_start(vbox, (GtkWidget*)hbox_device, FALSE, FALSE, 10);
-    gtk_box_pack_start(vbox, (GtkWidget*)hbox_fps, FALSE, FALSE, 10);
     gtk_box_pack_start(vbox, (GtkWidget*)hbox_start, FALSE, FALSE, 10);
     gtk_box_pack_start(vbox, (GtkWidget*)tree_view, FALSE, FALSE, 10);
 
@@ -256,13 +237,10 @@ int main(int argc, char** argv) {
 
     gtk_widget_show((GtkWidget*)hbox_folder);
     gtk_widget_show((GtkWidget*)hbox_device);
-    gtk_widget_show((GtkWidget*)hbox_fps);
     gtk_widget_show((GtkWidget*)hbox_start);
 
-    gtk_widget_show((GtkWidget*)label_fps);
     
     gtk_widget_show((GtkWidget*)entry_folder);
-    gtk_widget_show((GtkWidget*)entry_fps);
 
     gtk_widget_show((GtkWidget*)button_device);
     gtk_widget_show((GtkWidget*)button_folder);

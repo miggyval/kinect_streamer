@@ -49,6 +49,7 @@ link_directories(
 add_executable( kinect_camera_dual	src/nodes/kinect_camera_dual.cpp )
 add_executable( kinect_recorder_cli	src/nodes/kinect_recorder_cli.cpp )
 add_executable( kinect_recorder_multi_cli	src/nodes/kinect_recorder_multi_cli.cpp )
+add_executable( kinect_recorder_multi_test	src/nodes/kinect_recorder_multi_test.cpp )
 add_executable( kinect_viewer_cli	src/nodes/kinect_viewer_cli.cpp )
 add_executable( kinect_viewer_multi_cli	src/nodes/kinect_viewer_multi_cli.cpp )
 add_executable( kinect_recorder_gui	src/nodes/kinect_recorder_gui.cpp )
@@ -58,6 +59,7 @@ target_link_libraries( kinect_camera_dual ${freenect2_LIBRARIES} ${OpenCV_LIBS} 
 
 target_link_libraries( kinect_recorder_cli	${freenect2_LIBRARIES} ${OpenCV_LIBS} ${kinect_streamer_LIBS} stdc++fs )
 target_link_libraries( kinect_recorder_multi_cli	${freenect2_LIBRARIES} ${OpenCV_LIBS} ${kinect_streamer_LIBS} stdc++fs )
+target_link_libraries( kinect_recorder_multi_test	${freenect2_LIBRARIES} ${OpenCV_LIBS} kinect_streamer_lib stdc++fs )
 target_link_libraries( kinect_viewer_cli	${freenect2_LIBRARIES} ${OpenCV_LIBS} ${kinect_streamer_LIBS} stdc++fs)
 target_link_libraries( kinect_viewer_multi_cli	${freenect2_LIBRARIES} ${OpenCV_LIBS} ${kinect_streamer_LIBS} stdc++fs)
 
@@ -67,6 +69,7 @@ target_link_libraries( kinect_viewer_gui	${freenect2_LIBRARIES} ${OpenCV_LIBS} $
 set_target_properties( kinect_camera_dual	PROPERTIES CXX_STANDARD 17 )
 set_target_properties( kinect_recorder_cli	PROPERTIES CXX_STANDARD 17 )
 set_target_properties( kinect_recorder_multi_cli	PROPERTIES CXX_STANDARD 17 )
+set_target_properties( kinect_recorder_multi_test	PROPERTIES CXX_STANDARD 17 )
 set_target_properties( kinect_recorder_gui	PROPERTIES CXX_STANDARD 17 )
 set_target_properties( kinect_viewer_cli	PROPERTIES CXX_STANDARD 17 )
 set_target_properties( kinect_viewer_multi_cli	PROPERTIES CXX_STANDARD 17 )

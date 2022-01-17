@@ -17,7 +17,7 @@ namespace KinectStreamer {
 
 KinectDevice::KinectDevice(std::string serial) {
 
-    pipeline = new libfreenect2::CudaPacketPipeline();
+    pipeline = new libfreenect2::OpenGLPacketPipeline();
     freenect2 = new libfreenect2::Freenect2;
     listener = new libfreenect2::SyncMultiFrameListener(libfreenect2::Frame::Color | libfreenect2::Frame::Ir | libfreenect2::Frame::Depth);
     

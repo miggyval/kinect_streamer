@@ -78,7 +78,8 @@
         "*.inc": "cpp",
         "csetjmp": "cpp",
         "future": "cpp",
-        "scoped_allocator": "cpp"
+        "scoped_allocator": "cpp",
+        "regex": "cpp"
     },
     "python.analysis.extraPaths": [
         "/opt/ros/noetic/lib/python3/dist-packages"

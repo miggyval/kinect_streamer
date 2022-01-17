@@ -21,6 +21,7 @@
 #include "opencv2/videoio.hpp"
 #include <iostream>
 
+
 using namespace cv;
 
 #define MODE_DIR    1
@@ -161,8 +162,8 @@ int main(int argc, char** argv) {
             for (std::string serial : serials) {
                 color_imgs[serial] = Mat(Size(COLOR_W, COLOR_H), CV_8UC4);
                 depth_imgs[serial] = Mat(Size(DEPTH_W, DEPTH_H), CV_32FC1);
+            
             }
-
             bool finished = false;
             while (!finished) {
                 for (std::string serial : serials) {
@@ -173,8 +174,9 @@ int main(int argc, char** argv) {
                         finished_map[serial] = true;
                         continue;
                     }
+                    depth_imgs[serial] /= DEPTH_MAX;
                     imshow(serial + "_color", color_imgs[serial]);
-                    imshow(serial + "_depth", depth_imgs[serial] / DEPTH_MAX);
+                    imshow(serial + "_depth", depth_imgs[serial]);
                 }
                 waitKey(16);
                 finished = true;
