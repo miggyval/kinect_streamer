@@ -1,0 +1,6 @@
+<launch>
+  <arg name="verbose" default="true"/>
+  <node pkg="kinect_streamer_bin" name="kinect_viewer_multi"
+    type="kinect_viewer output="screen" args="-d /home/valencimm/.ros/kinect_recordings/2022-01-17-12-30-39-296-162-319">
+  </node>
+</launch>
