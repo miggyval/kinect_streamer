@@ -64,7 +64,6 @@ bool ends_with(std::string const &str, std::string const &end) {
 
 int main(int argc, char** argv) {
 
-    cv::CascadeClassifier face_cascade;
     KinectViewerArgs args = argparse::parse<KinectViewerArgs>(argc, argv);
 
     std::vector<std::string> serial_args;

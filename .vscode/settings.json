@@ -74,7 +74,11 @@
         "bit": "cpp",
         "*.ipp": "cpp",
         "any": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "*.inc": "cpp",
+        "csetjmp": "cpp",
+        "future": "cpp",
+        "scoped_allocator": "cpp"
     },
     "python.analysis.extraPaths": [
         "/opt/ros/noetic/lib/python3/dist-packages"

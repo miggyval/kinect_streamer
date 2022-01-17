@@ -33,9 +33,9 @@
 #include <kinect_streamer/kinect_streamer.hpp>
 
 struct KinectRecorderArgs : public argparse::Args {
-    std::string &src_path = arg("directory path for recorded data").set_default("");
+    std::string &src_path = kwarg("d,","directory path for recorded data", " ").set_default(" ");
     std::vector<std::string> &serials = kwarg("s,serials", "Serial Numbers").multi_argument();
-    bool &verbose = kwarg("v,verbose", "A flag to toggle verbose").set_default(false);
+    bool &verbose = kwarg("v,verbose", "A flag to toggle verbose", "false").set_default(false);
 };
 
 int flag = false;
@@ -68,15 +68,29 @@ bool is_valid_serial(std::string str) {
     return true;
 }
 
+
+bool ends_with(std::string const &str, std::string const &end) {
+    if (str.length() >= end.length()) {
+        return (0 == str.compare(str.length() - end.length(), end.length(), end));
+    } else {
+        return false;
+    }
+}
+
+bool starts_with(std::string const &str, std::string const &start) {
+    if (str.length() >= start.length()) {
+        return (0 == str.compare(0, start.length(), start));
+    } else {
+        return false;
+    }
+}
+
 namespace fs = std::experimental::filesystem;
 
 int main(int argc, char** argv) {
-    std::cout << "CUDA Enabled Device Count: " << cv::cuda::getCudaEnabledDeviceCount() << "\n\r";
-    std::string face_cascade_name = "/usr/share/opencv4/haarcascades/haarcascade_frontalface_default.xml";
-    cv::Ptr<cv::cuda::CascadeClassifier> face_cascade = cv::cuda::CascadeClassifier::create(face_cascade_name);
     KinectRecorderArgs args = argparse::parse<KinectRecorderArgs>(argc, argv);
-    signal(SIGINT, pre_handler);
 
+    signal(SIGINT, pre_handler);
 
     if (!args.verbose) {
         libfreenect2::setGlobalLogger(NULL);
@@ -111,7 +125,7 @@ int main(int argc, char** argv) {
         std::cout << "Too many serial numbers in input." << "\n\r";
         exit(-1);
     }
-    
+
     for (std::string serial : serials) {
         libfreenect2::PacketPipeline* pipeline = new libfreenect2::OpenGLPacketPipeline();
         libfreenect2::Freenect2Device* device = freenect2.openDevice(serial, pipeline);
@@ -126,25 +140,50 @@ int main(int argc, char** argv) {
         listeners[serial] = listener;
     }
 
-    std::string src_path = args.src_path; 
-    if (src_path == "") {
+    std::string src_path = args.src_path;
+    std::cout << src_path << std::endl;
+
+    if (src_path == " ") {
+
+        std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+        auto duration = now.time_since_epoch();
+
+        typedef std::chrono::duration<int, std::ratio_multiply<std::chrono::hours::period, std::ratio<24>>::type> Days;
+
+        Days days = std::chrono::duration_cast<Days>(duration);
+            duration -= days;
+        auto hours = std::chrono::duration_cast<std::chrono::hours>(duration);
+            duration -= hours;
+        auto minutes = std::chrono::duration_cast<std::chrono::minutes>(duration);
+            duration -= minutes;
+        auto seconds = std::chrono::duration_cast<std::chrono::seconds>(duration);
+            duration -= seconds;
+        auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
+            duration -= milliseconds;
+        auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(duration);
+            duration -= microseconds;
+        auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
+
         time_t rawtime;
         struct tm* ptm;
-        struct timespec* pts;
         time ( &rawtime );
         ptm = gmtime ( &rawtime );
-        clock_gettime(CLOCK_REALTIME, pts);
-        char datetime_buffer[128];
+
+
+        char datetime_buffer[64];
+
         std::sprintf(
             datetime_buffer,
-            "%04d-%02d-%02d-%02d-%02d-%02d-%06ld",
+            "%04d-%02d-%02d-%02ld-%02ld-%02ld-%03ld-%03ld-%03ld",
             (ptm->tm_year + 1900), // Year
             (ptm->tm_mon + 1), // Month
             (ptm->tm_mday), // Day
-            (ptm->tm_hour + AEST) % 24, // Hour
-            (ptm->tm_min), // Minute
-            (ptm->tm_sec), // Second
-            (pts->tv_nsec) // Nanosecond
+            (hours.count() + AEST) % 24, // Hour
+            minutes.count(), // Minute
+            seconds.count(), // Second
+            milliseconds.count(), // Millisecond
+            microseconds.count(), // Microsecond
+            nanoseconds.count() // Nanosecond
         );
         src_path = std::string("kinect_recordings/") + datetime_buffer;
         std::cout << "No directory supplied as argument." << "\n\r";
@@ -335,7 +374,6 @@ int main(int argc, char** argv) {
                     std::string color_filename = save_string + "/" + "color.kraw";
                     std::string depth_filename = save_string + "/" + "depth.kraw";
                     std::string time_filename = save_string + "/" + "time.kraw";
-                    
                     f_colors[serial] = fopen(color_filename.c_str(), "a+");
                     f_depths[serial] = fopen(depth_filename.c_str(), "a+");
                     f_times[serial] = fopen(time_filename.c_str(), "a+");
@@ -357,6 +395,5 @@ int main(int argc, char** argv) {
         delete registrations[serial];
     }
 
-    
     return 0;
 }
