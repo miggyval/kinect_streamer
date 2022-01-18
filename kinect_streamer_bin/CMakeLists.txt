@@ -47,7 +47,7 @@ link_directories(
 )
 
 # Add Executable Files
-add_executable( kinect_camera_dual	src/nodes/kinect_camera_dual.cpp )
+add_executable( kinect_camera	src/nodes/kinect_camera.cpp )
 
 add_executable( kinect_recorder	src/nodes/kinect_recorder.cpp )
 add_executable( kinect_viewer	src/nodes/kinect_viewer.cpp )
@@ -55,18 +55,19 @@ add_executable( kinect_viewer	src/nodes/kinect_viewer.cpp )
 add_executable( kinect_recorder_gui	src/nodes/kinect_recorder_gui.cpp )
 add_executable( kinect_viewer_gui	src/nodes/kinect_viewer_gui.cpp )
 
-target_link_libraries( kinect_camera_dual ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${catkin_LIBRARIES} kinect_streamer_lib stdc++fs )
+target_link_libraries( kinect_camera ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${catkin_LIBRARIES} kinect_streamer_lib stdc++fs )
+
 
 # Link Libraries
-target_link_libraries( kinect_recorder	${freenect2_LIBRARIES} ${OpenCV_LIBS} ${kinect_streamer_LIBS} kinect_streamer_lib stdc++fs )
-target_link_libraries( kinect_viewer	${freenect2_LIBRARIES} ${OpenCV_LIBS} ${kinect_streamer_LIBS} kinect_streamer_lib stdc++fs)
+target_link_libraries( kinect_recorder	${freenect2_LIBRARIES} ${OpenCV_LIBS} kinect_streamer_lib stdc++fs )
+target_link_libraries( kinect_viewer	${freenect2_LIBRARIES} ${OpenCV_LIBS} kinect_streamer_lib stdc++fs)
 
-target_link_libraries( kinect_recorder_gui	${freenect2_LIBRARIES} ${OpenCV_LIBS} ${GTK3_LIBRARIES}  ${kinect_streamer_LIBS} kinect_streamer_lib stdc++fs )
-target_link_libraries( kinect_viewer_gui	${freenect2_LIBRARIES} ${OpenCV_LIBS} ${GTK3_LIBRARIES}  ${kinect_streamer_LIBS} kinect_streamer_lib stdc++fs )
+target_link_libraries( kinect_recorder_gui	${freenect2_LIBRARIES} ${OpenCV_LIBS} ${GTK3_LIBRARIES} kinect_streamer_lib stdc++fs )
+target_link_libraries( kinect_viewer_gui	${freenect2_LIBRARIES} ${OpenCV_LIBS} ${GTK3_LIBRARIES} kinect_streamer_lib stdc++fs )
 
 
 # Set to C++17
-set_target_properties( kinect_camera_dual	PROPERTIES CXX_STANDARD 17 )
+set_target_properties( kinect_camera	PROPERTIES CXX_STANDARD 17 )
 
 set_target_properties( kinect_recorder	PROPERTIES CXX_STANDARD 17 )
 set_target_properties( kinect_viewer	PROPERTIES CXX_STANDARD 17 )
