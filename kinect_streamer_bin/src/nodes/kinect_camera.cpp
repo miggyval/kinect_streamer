@@ -32,6 +32,10 @@
 #include <cstdio>
 #include <cstring>
 #include <argparse/argparse.hpp>
+
+
+#include <tf/transform_broadcaster.h>
+
 #define myUINT8 1
 #define myFLOAT32 7
 
@@ -188,6 +192,9 @@ int main(int argc, char** argv) {
         manager_irs[serial]->setCameraInfo(info_irs[serial]);
     }
     */
+    for (std::string serial : serials) {
+        kin_devs[serial]->init_registration();
+    }
     std::map<std::string, ros::NodeHandle*> nh_clouds;
     std::map<std::string, ros::NodeHandle*> nh_colors;
     std::map<std::string, ros::NodeHandle*> nh_irs;
@@ -215,6 +222,14 @@ int main(int argc, char** argv) {
             kin_devs[serial]->wait_frames();
         }
 
+
+        for (std::string serial : serials) {
+            static tf::TransformBroadcaster br;
+            tf::Transform transform;
+            transform.setIdentity();
+            transform.setRotation(tf::createQuaternionFromRPY(-3.141592 / 2, 0, 0));
+            br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", std::string("frame_") + serial));
+        }
         for (std::string serial : serials) {
             libfreenect2::Frame* color = kin_devs[serial]->get_frame(libfreenect2::Frame::Color);
             libfreenect2::Frame* depth = kin_devs[serial]->get_frame(libfreenect2::Frame::Depth);
@@ -222,7 +237,7 @@ int main(int argc, char** argv) {
             cv::Mat img_color(cv::Size(color->width, color->height), CV_8UC4, color->data);
             cv::Mat img_depth(cv::Size(depth->width, depth->height), CV_32FC1, depth->data);
             cv::Mat img_ir(cv::Size(ir->width, ir->height), CV_32FC1, ir->data);
-            img_ir /= 32.0;
+            img_ir /= 128.0;
             cv::Mat img_ir_mono8;
             img_ir.convertTo(img_ir_mono8, CV_8UC1);
             cv::flip(img_color, img_color, 1);
@@ -236,32 +251,40 @@ int main(int argc, char** argv) {
             sensor_msgs::CameraInfo info_camera_ir = manager_irs[serial]->getCameraInfo();
             info_camera_ir.header.stamp = ros::Time::now();
             pub_camera_info_irs[serial].publish(info_camera_ir);
-            /*
+            
             cv::flip(img_color, img_color, 1);
-            libfreenect2::Frame undistorted(512, 424, 4);
-            libfreenect2::Frame registered(512, 424, 4);
+            std::unique_ptr<libfreenect2::Frame> undistorted = std::make_unique<libfreenect2::Frame>(512, 424, 4);
+            std::unique_ptr<libfreenect2::Frame> registered = std::make_unique<libfreenect2::Frame>(512, 424, 4);
+            cv::Mat img_undistorted(cv::Size(undistorted->width, undistorted->height), CV_32FC1, undistorted->data);
+            cv::Mat img_registered(cv::Size(registered->width, registered->height), CV_8UC4, registered->data);
             libfreenect2::Registration* registration = kin_devs[serial]->get_registration();
-            registration->apply(color, depth, &undistorted, &registered);
-            registration->undistortDepth(depth, &undistorted);
-            pcl::PointCloud<pcl::PointXYZRGB> cloud;
-            cloud.points.reserve(DEPTH_W * DEPTH_H);
+            cv::imshow(std::string("undistorted_") + serial, img_undistorted / 1024);
+            cv::imshow(std::string("registered_") + serial, img_registered);
+            cv::waitKey(1);
+
+            
+            registration->apply(color, depth, undistorted.get(), registered.get());
+            
+            registration->undistortDepth(depth, undistorted.get());
+            
+            std::unique_ptr<pcl::PointCloud<pcl::PointXYZRGB>> cloud = std::make_unique<pcl::PointCloud<pcl::PointXYZRGB>>();
+            cloud->points.reserve(DEPTH_W * DEPTH_H);
             const int arr_len = DEPTH_W * DEPTH_H;
             const int arr_size = DEPTH_W * DEPTH_H * sizeof(float);
-            sensor_msgs::PointCloud2 cloud_msg;
-            pcl::toROSMsg(cloud, cloud_msg);
-            cloud_msg.header.frame_id = "color_a";
-            cloud_msg.height = 1;
-            cloud_msg.width = DEPTH_W * DEPTH_H;
-            cloud_msg.is_dense = false;
-            cloud_msg.row_step = cloud_msg.point_step * cloud_msg.width;
-            cloud_msg.data.reserve(cloud_msg.width * cloud_msg.point_step);
-            cloud_msg.data.resize(cloud_msg.width * cloud_msg.point_step);
-
-            kin_devs[serial]->getPointCloud((const float*)undistorted.data, (const uint32_t*)registered.data, (uint8_t*)cloud_msg.data.data(), DEPTH_W, DEPTH_H);
+            std::unique_ptr<sensor_msgs::PointCloud2> cloud_msg = std::make_unique<sensor_msgs::PointCloud2>();
+            pcl::toROSMsg(*cloud, *cloud_msg);
+            cloud_msg->header.frame_id = std::string("frame_") + serial;
+            cloud_msg->height = 1;
+            cloud_msg->width = DEPTH_W * DEPTH_H;
+            cloud_msg->is_dense = false;
+            cloud_msg->row_step = cloud_msg->point_step * cloud_msg->width;
+            cloud_msg->data.reserve(cloud_msg->width * cloud_msg->point_step);
+            cloud_msg->data.resize(cloud_msg->width * cloud_msg->point_step);
+            kin_devs[serial]->getPointCloudGpu((const float*)undistorted->data, (const uint32_t*)registered->data, (uint8_t*)cloud_msg->data.data(), DEPTH_W, DEPTH_H);
             ros::Time now = ros::Time::now();
-            cloud_msg.header.stamp = now;
-            pub_clouds[serial].publish(cloud_msg);
-            */
+            cloud_msg->header.stamp = now;
+            pub_clouds[serial].publish(*cloud_msg);
+            
             kin_devs[serial]->release_frames();
 
         }

@@ -3,7 +3,6 @@ cmake_minimum_required( VERSION 3.10 )
 project( kinect_streamer_bin )
 
 set( freenect2_DIR $ENV{HOME}/freenect2/lib/cmake/freenect2 )
-set( OpenCV_DIR /usr/local/lib/cmake/opencv4 )
 
 find_package( freenect2 REQUIRED )
 find_package( OpenCV REQUIRED )

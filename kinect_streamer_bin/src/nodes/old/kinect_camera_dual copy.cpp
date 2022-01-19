@@ -291,8 +291,8 @@ int main(int argc, char** argv) {
         cloud_msg_b.data.reserve(cloud_msg_b.width * cloud_msg_b.point_step);
         cloud_msg_b.data.resize(cloud_msg_b.width * cloud_msg_b.point_step);
 
-        kin_dev_a.getPointCloud((const float*)undistorted_a.data, (const uint32_t*)registered_a.data, (uint8_t*)cloud_msg_a.data.data(), DEPTH_W, DEPTH_H);
-        kin_dev_b.getPointCloud((const float*)undistorted_b.data, (const uint32_t*)registered_b.data, (uint8_t*)cloud_msg_b.data.data(), DEPTH_W, DEPTH_H);
+        kin_dev_a.getPointCloudGpu((const float*)undistorted_a.data, (const uint32_t*)registered_a.data, (uint8_t*)cloud_msg_a.data.data(), DEPTH_W, DEPTH_H);
+        kin_dev_b.getPointCloudGpu((const float*)undistorted_b.data, (const uint32_t*)registered_b.data, (uint8_t*)cloud_msg_b.data.data(), DEPTH_W, DEPTH_H);
 
         ros::Time now = ros::Time::now();
 

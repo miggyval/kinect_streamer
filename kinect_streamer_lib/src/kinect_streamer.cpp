@@ -93,7 +93,34 @@ int KinectDevice::stop() {
     return dev->stop();
 }
 
-void KinectDevice::getPointCloud(const float* depth, const uint32_t* registered, uint8_t* cloud_data, int width, int height) {
+void KinectDevice::getPointCloudCpu(const float* depth, const uint32_t* registered, uint8_t* cloud_data, int width, int height) {
+
+    float cx = ir_params.cx;
+    float cy = ir_params.cy;
+    float fx = 1 / ir_params.fx;
+    float fy = 1 / ir_params.fy;
+
+    int numElements = width * height;
+    const int point_step = 32;
+    for (int i = 0; i < numElements; i++) {
+        int row = i / width;
+        int col = i % width;
+        const float depth_val = depth[width * row + col] / 1000.0f;
+        if (!isnan(depth_val) && depth_val > 0.001) {
+            uint8_t* ptr = cloud_data + i * point_step;
+            /* x-value */
+            *(float*)(ptr + 0) = -(col + 0.5 - cx) * fx * depth_val;
+            /* y-value */
+            *(float*)(ptr + 4) = (row + 0.5 - cy) * fy * depth_val;
+            /* z-value */
+            *(float*)(ptr + 8) = depth_val;
+            /* rgb-value */
+            *(uint32_t*)(ptr + 16) = registered[i];
+        }
+    }
+}
+
+void KinectDevice::getPointCloudGpu(const float* depth, const uint32_t* registered, uint8_t* cloud_data, int width, int height) {
 
     uint8_t* cloud_data_gpu = NULL;
     float* depth_gpu = NULL;

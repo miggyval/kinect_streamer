@@ -26,9 +26,6 @@
 #include <opencv2/core/cuda.inl.hpp>
 #include <opencv2/core/cuda_types.hpp>
 #include <opencv2/core/cuda_types.hpp>
-#include <opencv2/cudaobjdetect.hpp>
-#include <opencv2/cudaimgproc.hpp>
-#include <opencv2/cudawarping.hpp>
 
 #define LINE() std::cout << __LINE__ << std::endl;
 
