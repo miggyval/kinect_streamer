@@ -38,6 +38,7 @@ include_directories(
     ${OpenCV_INCLUDE_DIRS}
     ${GTK3_INCLUDE_DIRS}
     ${kinect_streamer_lib_INCLUDE_DIRS}
+    ${CUDA_INCLUDE_DIRS}
     $ENV{HOME}/argparse/include
 )
 
@@ -54,7 +55,9 @@ add_executable( kinect_viewer	src/nodes/kinect_viewer.cpp )
 add_executable( kinect_recorder_gui	src/nodes/kinect_recorder_gui.cpp )
 add_executable( kinect_viewer_gui	src/nodes/kinect_viewer_gui.cpp )
 
-target_link_libraries( kinect_camera ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${catkin_LIBRARIES} kinect_streamer_lib stdc++fs )
+
+message( STATUS "TESST!!!!!!!!!!!!!!                     ")
+target_link_libraries( kinect_camera ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${catkin_LIBRARIES} ${CUDA_LIBRARIES} kinect_streamer_lib stdc++fs )
 
 
 # Link Libraries

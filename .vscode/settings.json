@@ -80,7 +80,8 @@
         "future": "cpp",
         "scoped_allocator": "cpp",
         "regex": "cpp",
-        "slist": "cpp"
+        "slist": "cpp",
+        "__nullptr": "cpp"
     },
     "python.analysis.extraPaths": [
         "/opt/ros/noetic/lib/python3/dist-packages"

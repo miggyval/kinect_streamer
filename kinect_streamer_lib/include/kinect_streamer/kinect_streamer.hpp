@@ -47,7 +47,7 @@ public:
     int start();
     int stop();
     libfreenect2::Registration* get_registration();
-    void getPointCloudGpu(const float* depth, const uint32_t* registered, uint8_t* cloud_data, int width, int height);
+    void getPointCloudCuda(const float* depth, const uint32_t* registered, uint8_t* cloud_data, int width, int height);
     void getPointCloudCpu(const float* depth, const uint32_t* registered, uint8_t* cloud_data, int width, int height);
     void set_color_params(float cx, float cy, float fx, float fy);
     void set_ir_params(float cx, float cy, float fx, float fy, float k1, float k2, float k3, float p1, float p2);

@@ -13,12 +13,19 @@
 
 #include <kinect_streamer/kinect_streamer.hpp>
 
+#define USE_CUDA
+
 namespace KinectStreamer {
 
 KinectDevice::KinectDevice(std::string serial) {
 
+#ifdef USE_CUDA
     pipeline = new libfreenect2::OpenGLPacketPipeline();
-    freenect2 = new libfreenect2::Freenect2;
+#else
+    pipeline = new libfreenect2::CpuPacketPipeline();
+#endif
+
+    freenect2 = new libfreenect2::Freenect2();
     listener = new libfreenect2::SyncMultiFrameListener(libfreenect2::Frame::Color | libfreenect2::Frame::Ir | libfreenect2::Frame::Depth);
     
     if (freenect2->enumerateDevices() == 0) {
@@ -120,7 +127,7 @@ void KinectDevice::getPointCloudCpu(const float* depth, const uint32_t* register
     }
 }
 
-void KinectDevice::getPointCloudGpu(const float* depth, const uint32_t* registered, uint8_t* cloud_data, int width, int height) {
+void KinectDevice::getPointCloudCuda(const float* depth, const uint32_t* registered, uint8_t* cloud_data, int width, int height) {
 
     uint8_t* cloud_data_gpu = NULL;
     float* depth_gpu = NULL;
