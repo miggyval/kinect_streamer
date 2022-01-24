@@ -42,19 +42,15 @@
 
 #define MAX_DEPTH 5000.0
 
-bool protonect_shutdown = false; ///< Whether the running application should shut down.
+bool protonect_shutdown = false;
 
 void sigint_handler(int s) {
   protonect_shutdown = true;
 }
 
-// roslaunch aruco_detect aruco_detect.launch camera:=/color image:=/image_raw dictionary:=1 fiducial_len:=0.120 publish_images:=true
-// roslaunch aruco_detect aruco_detect.launch camera:=/color_b image:=/image_raw dictionary:=1 fiducial_len:=0.120 publish_images:=true
-
-
 struct KinectCameraArgs : public argparse::Args {
     std::vector<std::string> &serials = kwarg("s,serials", "Serial Numbers").multi_argument();
-    bool &verbose = kwarg("v,verbose", "A flag to toggle verbose", "false").set_default(false);
+    bool &verbose = kwarg("v,verbose", "A flag to toggle verbose", "true").set_default(false);
 };
 
 
@@ -78,19 +74,39 @@ bool is_valid_serial(std::string str) {
 }
 int main(int argc, char** argv) {
     ros::init(argc, argv, "kinect_camera");
-    libfreenect2::setGlobalLogger(NULL);
-
-    ////
-
 
     KinectCameraArgs args = argparse::parse<KinectCameraArgs>(argc, argv);
-
 
     if (!args.verbose) {
         libfreenect2::setGlobalLogger(NULL);
     }
-    libfreenect2::Freenect2 freenect2;
-    std::map<std::string, KinectStreamer::KinectDevice*> kin_devs;
+    
+
+    std::map<std::string, std::unique_ptr<KinectStreamer::KinectDevice>> kin_devs;
+
+    std::map<std::string, std::unique_ptr<ros::NodeHandle>> nh_camera_info_colors;
+    std::map<std::string, std::unique_ptr<ros::NodeHandle>> nh_camera_info_irs;
+    std::map<std::string, std::unique_ptr<ros::NodeHandle>> nh_camera_colors;
+    std::map<std::string, std::unique_ptr<ros::NodeHandle>> nh_camera_irs;
+    std::map<std::string, std::unique_ptr<ros::NodeHandle>> nh_clouds;
+    std::map<std::string, std::unique_ptr<ros::NodeHandle>> nh_colors;
+    std::map<std::string, std::unique_ptr<ros::NodeHandle>> nh_irs;
+
+    std::map<std::string, std::unique_ptr<camera_info_manager::CameraInfoManager>> manager_colors;
+    std::map<std::string, std::unique_ptr<camera_info_manager::CameraInfoManager>> manager_irs;
+    
+    std::map<std::string, sensor_msgs::CameraInfo> info_colors;
+    std::map<std::string, sensor_msgs::CameraInfo> info_irs;
+
+    std::map<std::string, std::unique_ptr<image_transport::ImageTransport>> it_colors;
+    std::map<std::string, std::unique_ptr<image_transport::ImageTransport>> it_irs;
+
+    std::map<std::string, ros::Publisher>               pub_clouds;
+    std::map<std::string, image_transport::Publisher>   pub_colors;
+    std::map<std::string, image_transport::Publisher>   pub_irs;
+    std::map<std::string, ros::Publisher>               pub_camera_info_colors;
+    std::map<std::string, ros::Publisher>               pub_camera_info_irs;
+
     std::vector<std::string> serial_args = args.serials;
     std::vector<std::string> serials;
     for (std::string arg : serial_args) {
@@ -99,6 +115,7 @@ int main(int argc, char** argv) {
         }
     }
 
+    libfreenect2::Freenect2 freenect2;
     int num_devices = freenect2.enumerateDevices();
     if (num_devices == 0) {
         std::cout << "No devices detected!" << "\n\r";
@@ -110,7 +127,6 @@ int main(int argc, char** argv) {
         }
     }
 
-
     int n = serials.size();
     if (n > num_devices) {
         std::cout << "Too many serial numbers in input." << "\n\r";
@@ -121,32 +137,24 @@ int main(int argc, char** argv) {
 
 
     for (std::string serial : serials) {
-        KinectStreamer::KinectDevice* kin_dev = new KinectStreamer::KinectDevice(serial);
-        if (!kin_dev->start()) {
+        kin_devs[serial] = std::make_unique<KinectStreamer::KinectDevice>(serial);
+        if (!kin_devs[serial]->start()) {
             std::cout << "Failed to start Kinect Serial no.: " << serial << std::endl;
             exit(-1);
         }
-        kin_devs[serial] = kin_dev;
     }
-    std::map<std::string, ros::NodeHandle*> nh_camera_info_colors;
-    std::map<std::string, ros::NodeHandle*> nh_camera_info_irs;
-    std::map<std::string, ros::NodeHandle*> nh_camera_colors;
-    std::map<std::string, ros::NodeHandle*> nh_camera_irs;
-    std::map<std::string, camera_info_manager::CameraInfoManager*> manager_colors;
-    std::map<std::string, camera_info_manager::CameraInfoManager*> manager_irs;
-    std::map<std::string, ros::Publisher> pub_camera_info_colors;
-    std::map<std::string, ros::Publisher> pub_camera_info_irs;
-    std::map<std::string, sensor_msgs::CameraInfo> info_colors;
-    std::map<std::string, sensor_msgs::CameraInfo> info_irs;
+
     for (std::string serial : serials) {
-        nh_camera_info_colors[serial] = new ros::NodeHandle();
-        nh_camera_info_irs[serial] = new ros::NodeHandle();
-        nh_camera_colors[serial] = new ros::NodeHandle(std::string("color_") + serial);
-        nh_camera_irs[serial] = new ros::NodeHandle(std::string("ir_") + serial);
-        manager_colors[serial] = new camera_info_manager::CameraInfoManager(*nh_camera_colors[serial], std::string("color_") + serial);
-        manager_irs[serial] = new camera_info_manager::CameraInfoManager(*nh_camera_irs[serial], std::string("ir_") + serial);
-        pub_camera_info_colors[serial] = nh_camera_info_colors[serial]->advertise<sensor_msgs::CameraInfo>(std::string("color_") + serial + std::string("/camera_info"), 1);
-        pub_camera_info_irs[serial] = nh_camera_info_irs[serial]->advertise<sensor_msgs::CameraInfo>(std::string("ir_") + serial + std::string("/camera_info"), 1);
+
+        nh_camera_info_colors[serial]   = std::make_unique<ros::NodeHandle>();
+        nh_camera_info_irs[serial]      = std::make_unique<ros::NodeHandle>();
+        nh_camera_colors[serial]        = std::make_unique<ros::NodeHandle>(std::string("color_") + serial);
+        nh_camera_irs[serial]           = std::make_unique<ros::NodeHandle>(std::string("ir_") + serial);
+        manager_colors[serial]          = std::make_unique<camera_info_manager::CameraInfoManager>(*nh_camera_colors[serial], std::string("color_") + serial);
+        manager_irs[serial]             = std::make_unique<camera_info_manager::CameraInfoManager>(*nh_camera_irs[serial], std::string("ir_") + serial);
+
+        pub_camera_info_colors[serial]  = nh_camera_info_colors[serial]->advertise<sensor_msgs::CameraInfo>(std::string("color_") + serial + std::string("/camera_info"), 1);
+        pub_camera_info_irs[serial]     = nh_camera_info_irs[serial]->advertise<sensor_msgs::CameraInfo>(std::string("ir_") + serial + std::string("/camera_info"), 1);
 
         if (!manager_colors[serial]->loadCameraInfo("")) {
             std::cout << "Failed to get calibration for color camera: " << serial << std::endl;
@@ -160,60 +168,20 @@ int main(int argc, char** argv) {
     
     for (std::string serial : serials) {
         kin_devs[serial]->init_params();
-    }
-
-/*
-    std::map<std::string, float> cx_colors, cy_colors, fx_colors, fy_colors;
-    for (std::string serial : serials) {
-        kin_devs[serial]->get_color_params(cx_colors[serial], cy_colors[serial], fx_colors[serial], fy_colors[serial]);
-        info_colors[serial].K[2] = cx_colors[serial];
-        info_colors[serial].K[5] = cy_colors[serial];
-        info_colors[serial].K[0] = fx_colors[serial];
-        info_colors[serial].K[4] = fy_colors[serial];
-        info_colors[serial].K[2] = cx_colors[serial];
-        info_colors[serial].K[5] = cy_colors[serial];
-        info_colors[serial].K[0] = fx_colors[serial];
-        info_colors[serial].K[4] = fy_colors[serial];
-        manager_colors[serial]->setCameraInfo(info_colors[serial]);
-    }
-
-    std::map<std::string, float> cx_irs, cy_irs, fx_irs, fy_irs, k1_irs, k2_irs, k3_irs, p1_irs, p2_irs;
-    for (std::string serial : serials) {
-        kin_devs[serial]->get_ir_params(cx_irs[serial], cy_irs[serial], fx_irs[serial], fy_irs[serial], k1_irs[serial], k2_irs[serial], k3_irs[serial], p1_irs[serial], p2_irs[serial]);
-        info_irs[serial].K[2] = cx_irs[serial];
-        info_irs[serial].K[5] = cy_irs[serial];
-        info_irs[serial].K[0] = fx_irs[serial];
-        info_irs[serial].K[4] = fy_irs[serial];
-        info_irs[serial].D[0] = p1_irs[serial];
-        info_irs[serial].D[1] = p2_irs[serial];
-        info_irs[serial].D[2] = k1_irs[serial];
-        info_irs[serial].D[3] = k2_irs[serial];
-        info_irs[serial].D[4] = k3_irs[serial];
-        manager_irs[serial]->setCameraInfo(info_irs[serial]);
-    }
-    */
-    for (std::string serial : serials) {
         kin_devs[serial]->init_registration();
     }
-    std::map<std::string, ros::NodeHandle*> nh_clouds;
-    std::map<std::string, ros::NodeHandle*> nh_colors;
-    std::map<std::string, ros::NodeHandle*> nh_irs;
-    std::map<std::string, image_transport::ImageTransport*> it_colors;
-    std::map<std::string, image_transport::ImageTransport*> it_irs;
-    std::map<std::string, ros::Publisher> pub_clouds;
-    std::map<std::string, image_transport::Publisher> pub_colors;
-    std::map<std::string, image_transport::Publisher> pub_irs;
-
-
+    
     for (std::string serial : serials) {
-        nh_clouds[serial] = new ros::NodeHandle();
-        nh_colors[serial] = new ros::NodeHandle();
-        nh_irs[serial] = new ros::NodeHandle();
-        it_colors[serial] = new image_transport::ImageTransport(*nh_colors[serial]);
-        it_irs[serial] = new image_transport::ImageTransport(*nh_irs[serial]);
-        pub_clouds[serial] = nh_clouds[serial]->advertise<sensor_msgs::PointCloud2>(std::string("/points_") + serial, 1);
-        pub_colors[serial] = it_colors[serial]->advertise(std::string("color_") + serial + "/image_raw", 1);
-        pub_irs[serial] = it_irs[serial]->advertise(std::string("ir_") + serial + "/image_raw", 1);
+        nh_clouds[serial]   = std::make_unique<ros::NodeHandle>();
+        nh_colors[serial]   = std::make_unique<ros::NodeHandle>();
+        nh_irs[serial]      = std::make_unique<ros::NodeHandle>();
+        
+        it_colors[serial]   = std::make_unique<image_transport::ImageTransport>(*nh_colors[serial]);
+        it_irs[serial]      = std::make_unique<image_transport::ImageTransport>(*nh_irs[serial]);
+
+        pub_clouds[serial]  = nh_clouds[serial]->advertise<sensor_msgs::PointCloud2>(std::string("/points_") + serial, 1);
+        pub_colors[serial]  = it_colors[serial]->advertise(std::string("color_") + serial + "/image_raw", 1);
+        pub_irs[serial]     = it_irs[serial]->advertise(std::string("ir_") + serial + "/image_raw", 1);
     }
 
     while (ros::ok() && !protonect_shutdown) {
@@ -222,7 +190,6 @@ int main(int argc, char** argv) {
             kin_devs[serial]->wait_frames();
         }
 
-
         for (std::string serial : serials) {
             static tf::TransformBroadcaster br;
             tf::Transform transform;
@@ -230,10 +197,13 @@ int main(int argc, char** argv) {
             transform.setRotation(tf::createQuaternionFromRPY(-3.141592 / 2, 0, 0));
             br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", std::string("frame_") + serial));
         }
+
         for (std::string serial : serials) {
-            libfreenect2::Frame* color = kin_devs[serial]->get_frame(libfreenect2::Frame::Color);
-            libfreenect2::Frame* depth = kin_devs[serial]->get_frame(libfreenect2::Frame::Depth);
-            libfreenect2::Frame* ir = kin_devs[serial]->get_frame(libfreenect2::Frame::Ir);
+
+            libfreenect2::Frame* color  = kin_devs[serial]->get_frame(libfreenect2::Frame::Color);
+            libfreenect2::Frame* depth  = kin_devs[serial]->get_frame(libfreenect2::Frame::Depth);
+            libfreenect2::Frame* ir     = kin_devs[serial]->get_frame(libfreenect2::Frame::Ir);
+            
             cv::Mat img_color(cv::Size(color->width, color->height), CV_8UC4, color->data);
             cv::Mat img_depth(cv::Size(depth->width, depth->height), CV_32FC1, depth->data);
             cv::Mat img_ir(cv::Size(ir->width, ir->height), CV_32FC1, ir->data);
@@ -258,13 +228,9 @@ int main(int argc, char** argv) {
             cv::Mat img_undistorted(cv::Size(undistorted->width, undistorted->height), CV_32FC1, undistorted->data);
             cv::Mat img_registered(cv::Size(registered->width, registered->height), CV_8UC4, registered->data);
             libfreenect2::Registration* registration = kin_devs[serial]->get_registration();
-            cv::imshow(std::string("undistorted_") + serial, img_undistorted / 1024);
-            cv::imshow(std::string("registered_") + serial, img_registered);
-            cv::waitKey(1);
 
             
             registration->apply(color, depth, undistorted.get(), registered.get());
-            
             registration->undistortDepth(depth, undistorted.get());
             
             std::unique_ptr<pcl::PointCloud<pcl::PointXYZRGB>> cloud = std::make_unique<pcl::PointCloud<pcl::PointXYZRGB>>();
@@ -290,19 +256,7 @@ int main(int argc, char** argv) {
         }
     }
     for (std::string serial : serials) {
-        delete nh_camera_info_colors[serial];
-        delete nh_camera_info_irs[serial];
-        delete nh_camera_colors[serial];
-        delete nh_camera_irs[serial];
-        delete manager_colors[serial];
-        delete manager_irs[serial];
-        delete nh_clouds[serial];
-        delete nh_colors[serial];
-        delete nh_irs[serial];
-        delete it_colors[serial];
-        delete it_irs[serial];
         kin_devs[serial]->stop();
-        delete kin_devs[serial];
     }
     return 0;
 }
