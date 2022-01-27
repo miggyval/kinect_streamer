@@ -14,23 +14,16 @@ find_package( CUDA REQUIRED )
 
 find_package(catkin REQUIRED COMPONENTS
   kinect_streamer_lib
+  kinect_streamer_ros
   std_msgs
   sensor_msgs
   image_transport
   cv_bridge
-  roscpp
-  rospy
   camera_info_manager
   pcl_conversions
-  pcl_ros
 )
 
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
-
-catkin_package(
-  CATKIN_DEPENDS roscpp rospy std_msgs
-)
-
 
 include_directories(
     ${catkin_INCLUDE_DIRS}
@@ -38,12 +31,14 @@ include_directories(
     ${OpenCV_INCLUDE_DIRS}
     ${GTK3_INCLUDE_DIRS}
     ${kinect_streamer_lib_INCLUDE_DIRS}
+    ${kinect_streamer_ros_INCLUDE_DIRS}
     ${CUDA_INCLUDE_DIRS}
     $ENV{HOME}/argparse/include
 )
 
 link_directories(
-    ${kinect_streamer_LIB_DIR}
+    ${kinect_streamer_lib_LIB_DIR}
+    ${kinect_streamer_ros_LIB_DIR}
 )
 
 # Add Executable Files
@@ -55,9 +50,7 @@ add_executable( kinect_viewer	src/nodes/kinect_viewer.cpp )
 add_executable( kinect_recorder_gui	src/nodes/kinect_recorder_gui.cpp )
 add_executable( kinect_viewer_gui	src/nodes/kinect_viewer_gui.cpp )
 
-
-message( STATUS "TESST!!!!!!!!!!!!!!                     ")
-target_link_libraries( kinect_camera ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${catkin_LIBRARIES} ${CUDA_LIBRARIES} kinect_streamer_lib stdc++fs )
+target_link_libraries( kinect_camera ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${catkin_LIBRARIES} ${CUDA_LIBRARIES} kinect_streamer_ros kinect_streamer_lib stdc++fs )
 
 
 # Link Libraries
@@ -78,8 +71,3 @@ set_target_properties( kinect_recorder_gui	PROPERTIES CXX_STANDARD 17 )
 set_target_properties( kinect_viewer_gui	PROPERTIES CXX_STANDARD 17 )
 	
 add_compile_options(${GTK3_CFLAGS_OTHER}) 
-
-catkin_install_python(PROGRAMS
-  src/nodes/kinect_tf.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)

@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name> kinect_streamer_bin </name>
+  <name> kinect_streamer_ros </name>
   <version> 0.0.0 </version>
-  <description> The Kinect Streamer Binaries </description>
+  <description> The Kinect Streamer ROS Package </description>
   <maintainer email="miguel.valencia@uq.edu.au">Miguel Marco Valencia</maintainer>
   <license>Apache 2.0</license>
 
@@ -11,22 +11,11 @@
   <author>Miguel Marco Valencia</author>
 
   <buildtool_depend>catkin</buildtool_depend>
-  
   <build_depend>message_generation</build_depend>
   <build_depend>eigen</build_depend>
-  <build_depend>kinect_streamer_lib</build_depend>
-  <build_depend>kinect_streamer_ros</build_depend>
-  <build_depend>std_msgs</build_depend>
-  
   <build_export_depend>message_runtime</build_export_depend>
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
   <exec_depend>message_runtime</exec_depend>
-  <exec_depend>kinect_streamer_lib</exec_depend>
-  <exec_depend>kinect_streamer_ros</exec_depend>
-  <exec_depend>std_msgs</exec_depend>
-
-
-  <exec_depend>pcl_conversions</exec_depend>
-  <exec_depend>libpcl-all</exec_depend>
-
-
+  <exec_depend>rospy</exec_depend>
 </package>
