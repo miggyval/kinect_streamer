@@ -1,4 +1,10 @@
-#include <ros/ros.h>
+#define ENABLE_ROS
+#define ENABLE_CUDA
+
+#include <signal.h>
+#include <cstdio>
+#include <cstring>
+#include <argparse/argparse.hpp>
 #include <kinect_streamer/kinect_streamer.hpp>
 
 #include <libfreenect2/libfreenect2.hpp>
@@ -7,40 +13,35 @@
 #include <libfreenect2/packet_pipeline.h>
 #include <libfreenect2/logger.h>
 
-#include <sensor_msgs/image_encodings.h>
-#include <sensor_msgs/CameraInfo.h>
-#include <image_transport/image_transport.h>
-#include <cv_bridge/cv_bridge.h>
-
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
-
-#include <camera_info_manager/camera_info_manager.h>
-
 
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/filters/voxel_grid.h>
 
-// Include PointCloud2 message
+#ifdef ENABLE_ROS
+#include <ros/ros.h>
+#include <camera_info_manager/camera_info_manager.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <tf/tf.h>
-
-#include <signal.h>
-#include <cstdio>
-#include <cstring>
-#include <argparse/argparse.hpp>
-
-
 #include <tf/transform_broadcaster.h>
+#include <sensor_msgs/image_encodings.h>
+#include <sensor_msgs/CameraInfo.h>
+#include <image_transport/image_transport.h>
+#include <cv_bridge/cv_bridge.h>
+#endif
 
+#ifdef ENABLE_CUDA
 #include <cuda_runtime.h>
-
+#endif
 
 #define myUINT8 1
 #define myFLOAT32 7
+
+#define POINT_STEP 32
 
 
 #define MAX_DEPTH   (5000.0)
@@ -53,10 +54,7 @@ void sigint_handler(int s) {
   shutdown = true;
 }
 
-
-#define USE_CUDA
-
-#ifdef USE_CUDA
+#ifdef ENABLE_CUDA
 bool initDevice(const int deviceId) {
     int deviceCount = 0;
     cudaGetDeviceCount(&deviceCount);
@@ -132,32 +130,10 @@ bool is_valid_serial(std::string str) {
 }
 
 
-/**
- * @brief Main logic for Kinect Camera program
- */
-int main(int argc, char** argv) {
-    ros::init(argc, argv, "kinect_camera");
+#ifdef ENABLE_ROS
 
-    KinectCameraArgs args = argparse::parse<KinectCameraArgs>(argc, argv);
-
-    if (!args.verbose) {
-        libfreenect2::setGlobalLogger(NULL);
-    }
-    
-#ifdef USE_CUDA
-    initDevice(0);
-#endif
-
-    ///////////////////////////////////////////////////
-    //                                               //
-    // Maps to store variables on a per-Kinect basis // 
-    //                                               //
-    ///////////////////////////////////////////////////
-
-    // Kinect Devices (from kinect_streamer library)
-    std::map<std::string, std::unique_ptr<KinectStreamer::KinectDevice>> kin_devs;
-
-    // Node Handles
+class KinectROS {
+private:
     std::map<std::string, std::unique_ptr<ros::NodeHandle>> nh_camera_info_colors;
     std::map<std::string, std::unique_ptr<ros::NodeHandle>> nh_camera_info_irs;
     std::map<std::string, std::unique_ptr<ros::NodeHandle>> nh_camera_colors;
@@ -179,6 +155,142 @@ int main(int argc, char** argv) {
     std::map<std::string, ros::Publisher>               pub_camera_info_colors;
     std::map<std::string, ros::Publisher>               pub_camera_info_irs;
 
+public:
+    KinectROS(int argc, char** argv);
+    void init_camera_pub(std::vector<std::string> serials);
+    void init_frame_pub(std::vector<std::string> serials);
+    void init_cloud_pub(std::vector<std::string> serials);
+    void send_image(std::string serial, cv::Mat img_color, cv::Mat img_ir_mono8);
+    void send_cloud(std::string serial, uint8_t* cloud_data, int size);
+};
+
+
+KinectROS::KinectROS(int argc, char** argv) {
+    ros::init(argc, argv, "kinect_camera");
+}
+
+void KinectROS::init_camera_pub(std::vector<std::string> serials) {
+    // For each device, create node handles and publishers.
+    for (std::string serial : serials) {
+
+        nh_camera_info_colors[serial]   = std::make_unique<ros::NodeHandle>();
+        nh_camera_info_irs[serial]      = std::make_unique<ros::NodeHandle>();
+
+        nh_camera_colors[serial]        = std::make_unique<ros::NodeHandle>(std::string("color_") + serial);
+        nh_camera_irs[serial]           = std::make_unique<ros::NodeHandle>(std::string("ir_") + serial);
+
+        pub_camera_info_colors[serial]  = nh_camera_info_colors[serial]->advertise<sensor_msgs::CameraInfo>(std::string("color_") + serial + std::string("/camera_info"), 1);
+        pub_camera_info_irs[serial]     = nh_camera_info_irs[serial]->advertise<sensor_msgs::CameraInfo>(std::string("ir_") + serial + std::string("/camera_info"), 1);
+
+        // For each device, create a camera info manager using the default directory for calibration data.
+        manager_colors[serial]          = std::make_unique<camera_info_manager::CameraInfoManager>(*nh_camera_colors[serial], std::string("color_") + serial);
+        manager_irs[serial]             = std::make_unique<camera_info_manager::CameraInfoManager>(*nh_camera_irs[serial], std::string("ir_") + serial);
+
+        if (!manager_colors[serial]->loadCameraInfo("")) {
+            std::cout << "Failed to get calibration for color camera: " << serial << std::endl;
+        }
+
+        if (!manager_irs[serial]->loadCameraInfo("")) {
+            std::cout << "Failed to get calibration from ir camera: " << serial << std::endl;
+        }
+
+        info_colors[serial] = manager_colors[serial]->getCameraInfo();
+        info_irs[serial]    = manager_irs[serial]->getCameraInfo();
+    }
+}
+
+
+void KinectROS::init_frame_pub(std::vector<std::string> serials) {
+    for (std::string serial : serials) {
+
+        it_colors[serial]   = std::make_unique<image_transport::ImageTransport>(ros::NodeHandle()); // Image Transport Node Handle for Color Frame
+        it_irs[serial]      = std::make_unique<image_transport::ImageTransport>(ros::NodeHandle()); // Image Transport Node Handle for IR Frame
+
+        pub_colors[serial]  = it_colors[serial]->advertise(std::string("color_") + serial + "/image_raw", 1);               // Publisher for Color Frame
+        pub_irs[serial]     = it_irs[serial]->advertise(std::string("ir_") + serial + "/image_raw", 1);                     // Publisher for IR Frame
+    }
+}
+
+
+void KinectROS::init_cloud_pub(std::vector<std::string> serials) {
+    for (std::string serial : serials) {
+        nh_clouds[serial]   = std::make_unique<ros::NodeHandle>();  // Point Cloud Node Handle
+        pub_clouds[serial]  = nh_clouds[serial]->advertise<sensor_msgs::PointCloud2>(std::string("/points_") + serial, 1);  // Publisher for Point Cloud
+    }
+}
+
+
+void KinectROS::send_image(std::string serial, cv::Mat img_color, cv::Mat img_ir_mono8) {
+        // Create ROS sensor messages from OpenCV Images
+    sensor_msgs::ImagePtr msg_color = cv_bridge::CvImage(std_msgs::Header(), "bgra8", img_color).toImageMsg();
+    sensor_msgs::ImagePtr msg_ir    = cv_bridge::CvImage(std_msgs::Header(), "mono8", img_ir_mono8).toImageMsg();
+
+    // Publish the sensor messages
+    pub_colors[serial].publish(msg_color);
+    pub_irs[serial].publish(msg_ir);
+
+    // Create and publish the camera info
+    sensor_msgs::CameraInfo info_camera_color = manager_colors[serial]->getCameraInfo();
+    sensor_msgs::CameraInfo info_camera_ir = manager_irs[serial]->getCameraInfo();
+    ros::Time now = ros::Time::now();
+    info_camera_color.header.stamp = now;
+    info_camera_ir.header.stamp = now;
+    pub_camera_info_colors[serial].publish(info_camera_color);
+    pub_camera_info_irs[serial].publish(info_camera_ir);
+}
+
+
+void KinectROS::send_cloud(std::string serial, uint8_t* cloud_data, int size) {
+
+    pcl::PointCloud<pcl::PointXYZRGB> cloud;
+    cloud.points.reserve(DEPTH_W * DEPTH_H);
+    const int arr_len = DEPTH_W * DEPTH_H;
+    const int arr_size = DEPTH_W * DEPTH_H * sizeof(float);
+    std::unique_ptr<sensor_msgs::PointCloud2> cloud_msg = std::make_unique<sensor_msgs::PointCloud2>();
+    pcl::toROSMsg(cloud, *cloud_msg);
+    cloud_msg->header.frame_id = std::string("frame_") + serial;
+    cloud_msg->height = 1;
+    cloud_msg->width = DEPTH_W * DEPTH_H;
+    cloud_msg->is_dense = false;
+    cloud_msg->row_step = DEPTH_W * DEPTH_H * POINT_STEP;
+    cloud_msg->data.reserve(DEPTH_W * DEPTH_H * POINT_STEP);
+    cloud_msg->data.resize(DEPTH_W * DEPTH_H * POINT_STEP);
+    memcpy(cloud_msg->data.data(), cloud_data, size);
+    ros::Time now = ros::Time::now();
+    cloud_msg->header.stamp = now;
+    pub_clouds[serial].publish(*cloud_msg);
+}
+#endif
+
+/**
+ * @brief Main logic for Kinect Camera program
+ */
+int main(int argc, char** argv) {
+
+    KinectCameraArgs args = argparse::parse<KinectCameraArgs>(argc, argv);
+
+    if (!args.verbose) {
+        libfreenect2::setGlobalLogger(NULL);
+    }
+    
+#ifdef ENABLE_CUDA
+    initDevice(0);
+#endif
+
+    ///////////////////////////////////////////////////
+    //                                               //
+    // Maps to store variables on a per-Kinect basis // 
+    //                                               //
+    ///////////////////////////////////////////////////
+
+    // Kinect Devices (from kinect_streamer library)
+    std::map<std::string, std::unique_ptr<KinectStreamer::KinectDevice>> kin_devs;
+
+#ifdef ENABLE_ROS
+    KinectROS kinect_ros(argc, argv);
+#endif
+
+    libfreenect2::Freenect2 freenect2;
 
     // Serial numbers serve as a key for the maps above.
     std::vector<std::string> serials;
@@ -190,7 +302,6 @@ int main(int argc, char** argv) {
     }
 
     // Check if there are any kinect devices, and print them out.
-    libfreenect2::Freenect2 freenect2;
     int num_devices = freenect2.enumerateDevices();
     if (num_devices == 0) {
         std::cout << "No devices detected!" << "\n\r";
@@ -218,34 +329,9 @@ int main(int argc, char** argv) {
         }
     }
 
-    for (std::string serial : serials) {
-
-        // For each device, create node handles and publishers.
-        nh_camera_info_colors[serial]   = std::make_unique<ros::NodeHandle>();
-        nh_camera_info_irs[serial]      = std::make_unique<ros::NodeHandle>();
-
-        nh_camera_colors[serial]        = std::make_unique<ros::NodeHandle>(std::string("color_") + serial);
-        nh_camera_irs[serial]           = std::make_unique<ros::NodeHandle>(std::string("ir_") + serial);
-
-        pub_camera_info_colors[serial]  = nh_camera_info_colors[serial]->advertise<sensor_msgs::CameraInfo>(std::string("color_") + serial + std::string("/camera_info"), 1);
-        pub_camera_info_irs[serial]     = nh_camera_info_irs[serial]->advertise<sensor_msgs::CameraInfo>(std::string("ir_") + serial + std::string("/camera_info"), 1);
-
-        // For each device, create a camera info manager using the default directory for calibration data.
-        manager_colors[serial]          = std::make_unique<camera_info_manager::CameraInfoManager>(*nh_camera_colors[serial], std::string("color_") + serial);
-        manager_irs[serial]             = std::make_unique<camera_info_manager::CameraInfoManager>(*nh_camera_irs[serial], std::string("ir_") + serial);
-
-        if (!manager_colors[serial]->loadCameraInfo("")) {
-            std::cout << "Failed to get calibration for color camera: " << serial << std::endl;
-        }
-
-        if (!manager_irs[serial]->loadCameraInfo("")) {
-            std::cout << "Failed to get calibration from ir camera: " << serial << std::endl;
-        }
-
-        info_colors[serial] = manager_colors[serial]->getCameraInfo();
-        info_irs[serial]    = manager_irs[serial]->getCameraInfo();
-    }
-    
+#ifdef ENABLE_ROS
+    kinect_ros.init_camera_pub(serials);
+#endif
 
     for (std::string serial : serials) {
         // For each device, initialise the intrinsic parameters from the device
@@ -253,29 +339,31 @@ int main(int argc, char** argv) {
         // For each device, initialise the registration object
         kin_devs[serial]->init_registration();
     }
-    
-    for (std::string serial : serials) {
-        
-        // Node Handles
-        nh_clouds[serial]   = std::make_unique<ros::NodeHandle>();  // Point Cloud Node Handle
 
-        it_colors[serial]   = std::make_unique<image_transport::ImageTransport>(ros::NodeHandle()); // Image Transport Node Handle for Color Frame
-        it_irs[serial]      = std::make_unique<image_transport::ImageTransport>(ros::NodeHandle()); // Image Transport Node Handle for IR Frame
+#ifdef ENABLE_ROS
+    kinect_ros.init_frame_pub(serials);
+    kinect_ros.init_cloud_pub(serials);
+#endif
 
-        pub_clouds[serial]  = nh_clouds[serial]->advertise<sensor_msgs::PointCloud2>(std::string("/points_") + serial, 1);  // Publisher for Point Cloud
-        pub_colors[serial]  = it_colors[serial]->advertise(std::string("color_") + serial + "/image_raw", 1);               // Publisher for Color Frame
-        pub_irs[serial]     = it_irs[serial]->advertise(std::string("ir_") + serial + "/image_raw", 1);                     // Publisher for IR Frame
-    }
-
-    ros::Time now = ros::Time::now();
 
     // Keep running while ROS is still running, and while the shutdown command is off
-    while (ros::ok() && !shutdown) {
-        
+    while (true) {
+
+#ifdef ENABLE_ROS
+        if (!ros::ok()) {
+            break;
+        }
+#endif
+
+        if (shutdown) {
+            break;
+        }
         // Wait for the frames for all of the devices before processing.
         for (std::string serial : serials) {
             kin_devs[serial]->wait_frames();
         }
+
+#ifdef ENABLE_ROS
         // Broadcast the transforms based on extrinsic parameters
         // TODO: Defaulting to z-axis (of kinect) facing forward
         for (std::string serial : serials) {
@@ -283,9 +371,10 @@ int main(int argc, char** argv) {
             tf::Transform transform;
             transform.setIdentity();
             transform.setRotation(tf::createQuaternionFromRPY(-3.141592 / 2, 0, 0));
-            now = ros::Time::now();
+            ros::Time now = ros::Time::now();
             br.sendTransform(tf::StampedTransform(transform, now, "world", std::string("frame_") + serial));
         }
+#endif
 
         // Process the frame data (color, depth, and ir)
         for (std::string serial : serials) {
@@ -312,22 +401,9 @@ int main(int argc, char** argv) {
             cv::flip(img_color, img_color, 1);
             cv::flip(img_ir_mono8, img_ir_mono8, 1);
 
-            // Create ROS sensor messages from OpenCV Images
-            sensor_msgs::ImagePtr msg_color = cv_bridge::CvImage(std_msgs::Header(), "bgra8", img_color).toImageMsg();
-            sensor_msgs::ImagePtr msg_ir    = cv_bridge::CvImage(std_msgs::Header(), "mono8", img_ir_mono8).toImageMsg();
-
-            // Publish the sensor messages
-            pub_colors[serial].publish(msg_color);
-            pub_irs[serial].publish(msg_ir);
-
-            // Create and publish the camera info
-            sensor_msgs::CameraInfo info_camera_color = manager_colors[serial]->getCameraInfo();
-            sensor_msgs::CameraInfo info_camera_ir = manager_irs[serial]->getCameraInfo();
-            now = ros::Time::now();
-            info_camera_color.header.stamp = now;
-            info_camera_ir.header.stamp = now;
-            pub_camera_info_colors[serial].publish(info_camera_color);
-            pub_camera_info_irs[serial].publish(info_camera_ir);
+#ifdef ENABLE_ROS
+            kinect_ros.send_image(serial, img_color, img_ir_mono8);
+#endif
             
             // Flip color camera back (IR camera is not used again)
             cv::flip(img_color, img_color, 1);
@@ -344,31 +420,19 @@ int main(int argc, char** argv) {
             registration->undistortDepth(depth, undistorted.get());
             
             // Create point cloud data structure
-            std::unique_ptr<pcl::PointCloud<pcl::PointXYZRGB>> cloud = std::make_unique<pcl::PointCloud<pcl::PointXYZRGB>>();
-            cloud->points.reserve(DEPTH_W * DEPTH_H);
-            const int arr_len = DEPTH_W * DEPTH_H;
-            const int arr_size = DEPTH_W * DEPTH_H * sizeof(float);
             
-            std::unique_ptr<sensor_msgs::PointCloud2> cloud_msg = std::make_unique<sensor_msgs::PointCloud2>();
-            pcl::toROSMsg(*cloud, *cloud_msg);
-
-            // Set the parameters of the point cloud
-            cloud_msg->header.frame_id = std::string("frame_") + serial;
-            cloud_msg->height = 1;
-            cloud_msg->width = DEPTH_W * DEPTH_H;
-            cloud_msg->is_dense = false;
-            cloud_msg->row_step = cloud_msg->point_step * cloud_msg->width;
-            cloud_msg->data.reserve(cloud_msg->width * cloud_msg->point_step);
-            cloud_msg->data.resize(cloud_msg->width * cloud_msg->point_step);
-#ifdef USE_CUDA
-            kin_devs[serial]->getPointCloudCuda((const float*)undistorted->data, (const uint32_t*)registered->data, (uint8_t*)cloud_msg->data.data(), DEPTH_W, DEPTH_H);
+            uint8_t cloud_data[DEPTH_W * DEPTH_H * POINT_STEP];
+            
+#ifdef ENABLE_CUDA
+            kin_devs[serial]->getPointCloudCuda((const float*)undistorted->data, (const uint32_t*)registered->data, cloud_data, DEPTH_W, DEPTH_H);
 #else
-            kin_devs[serial]->getPointCloudCpu((const float*)undistorted->data, (const uint32_t*)registered->data, (uint8_t*)cloud_msg->data.data(), DEPTH_W, DEPTH_H);
+            kin_devs[serial]->getPointCloudCpu((const float*)undistorted->data, (const uint32_t*)registered->data, cloud_data, DEPTH_W, DEPTH_H);
 #endif
-            now = ros::Time::now();
-            cloud_msg->header.stamp = now;
-            pub_clouds[serial].publish(*cloud_msg);
-            
+
+#ifdef ENABLE_ROS
+            kinect_ros.send_cloud(serial, cloud_data, sizeof(cloud_data));
+#endif
+
             kin_devs[serial]->release_frames();
 
         }
