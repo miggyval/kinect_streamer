@@ -11,8 +11,8 @@
 Driver for recording and viewing Kinect v2 streams.
 
 **Features**
-- **kinect_recorder_multi** -> Recording to disk from Kinect v2 with multiple Kinects
-- **kinect_viewer_multi** -> Viewing binary files written by program with multiple Kinects
+- **kinect_recorder** -> Recording to disk from Kinect v2 with multiple Kinects
+- **kinect_viewer** -> Viewing binary files written by program with multiple Kinects
 - See chapter [Running Kinect](README.md#running-kinect-streamer) below for usage
 
 ## Acknowledgements
@@ -68,7 +68,11 @@ Follow instructions from morrisfranken:
 https://github.com/morrisfranken/argparse
 - Essentially, place this respository into your home directory.
 
-## Building with ROS (catkin)
+## Building with ROS (catkin)\
+### If you haven't already got a ROS Catkin Workspace:
+```console
+mkdir ~/catkin_ws
+```
 ```console
 cd ~/catkin_ws
 ```
@@ -94,11 +98,15 @@ source ./devel/setup.sh
 - Example Space: 1 hour -> 2 TB (for two Kinects running at 30 FPS)
 ```console
 # Usage
-roslaunch kinect_streamer_bin kinect_recorder_multi.launch
+roslaunch kinect_streamer_bin kinect_recorder.launch
 ```
 ### Viewing from Disk
-#### Command Line
 ```console
 # Usage
-roslaunch kinect_streamer_bin kinect_viewer_multi.launch
+roslaunch kinect_streamer_bin kinect_viewer.launch
+```
+### Running Demo PointCloud Software
+```console
+# Usage
+roslaunch kinect_streamer_bin kinect_camera.launch
 ```
