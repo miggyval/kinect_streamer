@@ -25,7 +25,7 @@ Driver for recording and viewing Kinect v2 streams.
 ```console
 sudo apt install git build-essential
 ```
-### Installing OpenCV
+### Installing OpenCV (Optional)
 ```console
 # Install a whole bunch of prerequisites
 sudo apt install build-essential cmake git pkg-config libgtk-3-dev \
