@@ -2,7 +2,7 @@
 <package format="2">
   <name> kinect_streamer_lib </name>
   <version> 0.0.0 </version>
-  <description> The Kinect Streamer ROS Package </description>
+  <description> The Kinect Streamer Library </description>
   <maintainer email="miguel.valencia@uq.edu.au">Miguel Marco Valencia</maintainer>
   <license>Apache 2.0</license>
 

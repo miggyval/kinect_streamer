@@ -321,7 +321,7 @@ int main(int argc, char** argv) {
             cv::putText(img_display, std::string("FPS: ") + frame_rate_string, cv::Point(20, 160), cv::FONT_HERSHEY_PLAIN, 3, cv::Scalar(0, 0, 0), 5);
             cv::putText(img_display, std::string("FPS: ") + frame_rate_string, cv::Point(20, 160), cv::FONT_HERSHEY_PLAIN, 3, cv::Scalar(255, 255, 255), 2);  
             cv::imshow(serial, img_display);
-            //listeners[serial]->release(frame_maps[serial]);
+            
             kin_devs[serial]->release_frames();
 
         }

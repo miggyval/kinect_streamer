@@ -25,6 +25,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 
+
 include_directories(
     ${catkin_INCLUDE_DIRS}
     ${freenect2_INCLUDE_DIR}
@@ -50,10 +51,9 @@ add_executable( kinect_viewer	src/nodes/kinect_viewer.cpp )
 add_executable( kinect_recorder_gui	src/nodes/kinect_recorder_gui.cpp )
 add_executable( kinect_viewer_gui	src/nodes/kinect_viewer_gui.cpp )
 
+# Link Libraries
 target_link_libraries( kinect_camera ${freenect2_LIBRARIES} ${OpenCV_LIBS} ${catkin_LIBRARIES} ${CUDA_LIBRARIES} kinect_streamer_ros kinect_streamer_lib stdc++fs )
 
-
-# Link Libraries
 target_link_libraries( kinect_recorder	${freenect2_LIBRARIES} ${OpenCV_LIBS} kinect_streamer_lib stdc++fs )
 target_link_libraries( kinect_viewer	${freenect2_LIBRARIES} ${OpenCV_LIBS} kinect_streamer_lib stdc++fs)
 
