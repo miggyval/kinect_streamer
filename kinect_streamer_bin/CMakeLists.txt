@@ -26,6 +26,9 @@ find_package(catkin REQUIRED COMPONENTS
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 
 
+catkin_package(
+)
+
 include_directories(
     ${catkin_INCLUDE_DIRS}
     ${freenect2_INCLUDE_DIR}
@@ -71,3 +74,8 @@ set_target_properties( kinect_recorder_gui	PROPERTIES CXX_STANDARD 17 )
 set_target_properties( kinect_viewer_gui	PROPERTIES CXX_STANDARD 17 )
 	
 add_compile_options(${GTK3_CFLAGS_OTHER}) 
+
+
+install(TARGETS kinect_demo
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
