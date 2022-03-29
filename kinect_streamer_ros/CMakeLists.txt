@@ -52,8 +52,11 @@ link_directories(${PCL_LIBRARY_DIRS})
 
 target_link_libraries( kinect_streamer_ros ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${freenect2_LIBRARIES} ${OpenCV_LIBS} kinect_depth stdc++fs )
 
-install(TARGETS kinect_demo
+install(TARGETS kinect_streamer_ros
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
+
+
+add_compile_options(${GTK3_CFLAGS_OTHER})
