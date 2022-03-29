@@ -25,6 +25,12 @@ Driver for recording and viewing Kinect v2 streams.
 ```console
 sudo apt install git build-essential
 ```
+```console
+sudo apt-get install libgtk-3-dev
+```
+```
+git clone https://github.com/morrisfranken/argparse.git ~/argparse
+```
 ### Installing OpenCV (Optional)
 ```console
 # Install a whole bunch of prerequisites
