@@ -1,0 +1,3 @@
+[submodule "kinect_streamer_lib"]
+	path = kinect_streamer_lib
+	url = https://github.com/uqmvale6/kinect_streamer_lib.git
